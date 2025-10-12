@@ -1,12 +1,26 @@
 <script lang="ts">
-import {defineComponent} from 'vue'
+import { defineComponent } from 'vue'
 
 export default defineComponent({
   name: "BaseInput",
   props: {
-    model: String,
+    // 1. A prop DEVE se chamar "modelValue"
+    modelValue: String,
     label: String,
-    placeholder: String
+    placeholder: String,
+    type: String
+  },
+  emits: ['update:modelValue'],
+  computed: {
+    value: {
+      get(): string | undefined {
+        // 2. O 'get' deve ler da prop correta: "modelValue"
+        return this.modelValue;
+      },
+      set(newValue: string) {
+        this.$emit('update:modelValue', newValue);
+      }
+    }
   }
 })
 </script>
@@ -14,7 +28,7 @@ export default defineComponent({
 <template>
   <div class="base-input">
     <span>{{ label }}</span>
-    <input v-model="model" type="text" :placeholder="placeholder" autocomplete="off" />
+    <input v-model="value" :type="type" :placeholder="placeholder" autocomplete="off" />
   </div>
 </template>
 

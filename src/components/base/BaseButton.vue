@@ -5,13 +5,26 @@ export default defineComponent({
   name: "BaseButton",
   props: {
     label: String,
-    type: String
+    type: String,
+    function: String
+  },
+  methods: {
+    thisFunction() {
+      if (this.function === 'login') {
+        this.$emit('continue-function', 'login');
+      } else if (this.function === 'register') {
+        this.$emit('continue-function', 'register');
+      }
+    }
   }
 })
 </script>
 
 <template>
-  <button :class="['base-button', type]">
+  <button
+      :class="['base-button', type]"
+      @click="thisFunction"
+  >
     {{ label }}
   </button>
 </template>

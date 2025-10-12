@@ -1,17 +1,13 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
-import Login from '@/pages/common/LoginPage.vue'
 
 export default defineComponent({
-  name: "App",
-  components: {
-    Login
-  }
+  name: "DarkLogo"
 })
 </script>
 
 <template>
-  <RouterView />
+
 </template>
 
 <style scoped>

@@ -2,9 +2,10 @@
 import {defineComponent} from 'vue'
 //Components
 import {CardHeather, BaseInput, BaseTextarea, BaseFileInput, BaseButton} from "@/components";
-
 //Types
 import type { RegisterProvider } from "@/types/user.ts";
+
+import getAddress from '@/services/viaCepApi.ts';
 
 export default defineComponent({
   name: "RegisterProvider",
@@ -33,12 +34,25 @@ export default defineComponent({
         address: {
           zipCode: '',
           street: '',
+          area: '',
           city: '',
           state: '',
           number: null,
         }
       } as RegisterProvider,
-      base64Cover: ''
+      address: ''
+    }
+  },
+  mounted() {
+  },
+  watch: {
+    // A chave do 'watch' deve ser uma string com o caminho para a propriedade que você quer observar.
+    'provider.address.zipCode'(newZipCode: string) {
+      const zipCodeAsString = String(newZipCode);
+      console.log('zip ', zipCodeAsString.length)
+      if (zipCodeAsString.length == 8) {
+        this.getAddressByZipCode(zipCodeAsString);
+      }
     }
   },
   methods: {
@@ -58,6 +72,17 @@ export default defineComponent({
     {
       this.provider.cover = base64
       console.log('base64 da capa: ', this.provider.cover)
+    },
+    async getAddressByZipCode(zipCode: string) {
+      if (zipCode.length === 8) {
+        this.address = await getAddress(zipCode);
+        this.provider.address.street = this.address.data.logradouro;
+        this.provider.address.area = this.address.data.bairro;
+        this.provider.address.city = this.address.data.localidade;
+        this.provider.address.state = this.address.data.uf;
+
+        console.log('endereço: ', this.provider.address)
+      }
     }
   }
 })
@@ -151,6 +176,8 @@ export default defineComponent({
               :label="'CEP'"
               :placeholder="'XXXXX-XXX'"
               :type="'number'"
+              v-model="provider.address.zipCode"
+              @keyup="getAddressByZipCode(this.provider.address.zipCode)"
           />
 
           <div class="address center f-row">
@@ -159,6 +186,7 @@ export default defineComponent({
                   :label="'Rua/Logradouro'"
                   :placeholder="'Nome da Rua'"
                   :type="'text'"
+                  v-model="provider.address.street"
               />
             </div>
 
@@ -167,9 +195,17 @@ export default defineComponent({
                   :label="'Número'"
                   :placeholder="'000'"
                   :type="'number'"
+                  v-model="provider.address.number"
               />
             </div>
           </div>
+
+          <base-input
+              :label="'Bairro'"
+              :placeholder="'Nome do Bairro'"
+              :type="'text'"
+              v-model="provider.address.area"
+          />
 
           <div class="address center f-row">
             <div class="address-full">
@@ -177,6 +213,7 @@ export default defineComponent({
                   :label="'Cidade'"
                   :placeholder="'Nome da Cidade'"
                   :type="'text'"
+                  v-model="provider.address.city"
               />
             </div>
 
@@ -185,6 +222,7 @@ export default defineComponent({
                   :label="'Estado'"
                   :placeholder="'UF'"
                   :type="'text'"
+                  v-model="provider.address.state"
               />
             </div>
           </div>

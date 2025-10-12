@@ -2,6 +2,7 @@ export type Address = {
     zipCode: String,
     street: String,
     city: String,
+    area: String,
     state: String,
     number: Number | null
 }

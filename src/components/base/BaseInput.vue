@@ -1,11 +1,11 @@
 <script lang="ts">
-import { defineComponent } from 'vue'
+import { defineComponent, PropType } from 'vue'
 
 export default defineComponent({
   name: "BaseInput",
   props: {
     // 1. A prop DEVE se chamar "modelValue"
-    modelValue: String,
+    modelValue: String as PropType<string>,
     label: String,
     placeholder: String,
     type: String
@@ -13,11 +13,11 @@ export default defineComponent({
   emits: ['update:modelValue'],
   computed: {
     value: {
-      get(): string | undefined {
+      get(): string | number | undefined {
         // 2. O 'get' deve ler da prop correta: "modelValue"
         return this.modelValue;
       },
-      set(newValue: string) {
+      set(newValue: string | number): void {
         this.$emit('update:modelValue', newValue);
       }
     }

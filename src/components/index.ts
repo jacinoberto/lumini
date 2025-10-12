@@ -8,6 +8,7 @@ export { default as BaseInput } from '@/components/base/BaseInput.vue';
 export { default as BaseNotification } from '@/components/base/BaseNotification.vue';
 export { default as BaseTextarea } from '@/components/base/BaseTextarea.vue';
 export { default as BaseToggle } from '@/components/base/BaseToggle.vue';
+export { default as BaseFileInput } from '@/components/base/BaseFileInput.vue';
 
 /*################__UI Components__################*/
 export { default as LightLogo } from '@/components/ui/LightLogo.vue';

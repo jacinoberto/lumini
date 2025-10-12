@@ -1,13 +1,64 @@
 <script lang="ts">
 import {defineComponent} from 'vue'
+//Components
+import {CardHeather, BaseInput, BaseTextarea, BaseFileInput, BaseButton} from "@/components";
 
-import { CardHeather, BaseInput, BaseTextarea } from "@/components";
+//Types
+import type { RegisterProvider } from "@/types/user.ts";
 
 export default defineComponent({
   name: "RegisterProvider",
   components: {
+    BaseButton,
     BaseInput,
-    CardHeather
+    CardHeather,
+    BaseTextarea,
+    BaseFileInput
+  },
+  data() {
+    return {
+      provider: {
+        barberName: '',
+        companyCode: '',
+        cover: '',
+        profile: '',
+        phone: '',
+        owner: {
+          name: '',
+          socialSecurity: '',
+          email: '',
+          phone: '',
+          password: '',
+        },
+        address: {
+          zipCode: '',
+          street: '',
+          city: '',
+          state: '',
+          number: null,
+        }
+      } as RegisterProvider,
+      base64Cover: ''
+    }
+  },
+  methods: {
+    async performRegister() {
+      console.log('Dados do usuário: ', this.provider)
+    },
+    handleAction(actionType: String) {
+      if (actionType === 'register') {
+        this.performRegister();
+      }
+    },
+    getBase64Profile(base64: string) {
+      this.provider.profile = base64;
+      console.log('base64 do perfil: ', this.provider.profile)
+    },
+    getBase64Cover(base64: string)
+    {
+      this.provider.cover = base64
+      console.log('base64 da capa: ', this.provider.cover)
+    }
   }
 })
 </script>
@@ -20,26 +71,194 @@ export default defineComponent({
 
   <main class="container-register-provider">
     <form
-      class="register-provider-form"
+      class="register-provider-form f-column"
       @submit.prevent=""
     >
-      <div class="input-block">
+      <!--Dados do Estabelecimento-->
+      <div class="input-block f-column">
         <div class="heather-block">
-          <span>Informações Básicas</span>
+          <span>Dados do Estabelecimento</span>
         </div>
 
-        <div class="inputs">
+        <div class="inputs f-column">
           <base-input
-            :label="'Nome da Barbearia'"
-            :placeholder="'Ex: Classic Barber'"
+              :label="'Nome da Barbearia'"
+              :placeholder="'Ex: Classic Barber'"
+              :type="'text'"
+              v-model="provider.barberName"
+          />
+
+          <base-input
+              :label="'CNPJ'"
+              :placeholder="'01.234.567/0001-98'"
+              :type="'number'"
+              v-model="provider.companyCode"
+          />
+
+          <base-input
+              :label="'Telefone/Whatsapp'"
+              :placeholder="'(27) 99988-7766)'"
+              :type="'number'"
+              v-model="provider.phone"
+          />
+        </div>
+      </div>
+
+      <!--Dados do Proprietário-->
+      <div class="input-block f-column">
+        <div class="heather-block">
+          <span>Dados do Proprietário</span>
+        </div>
+
+        <div class="inputs f-column">
+          <base-input
+            :label="'Seu Nome Completo'"
+            :placeholder="'Nome do Proprietário'"
             :type="'text'"
+            v-model="provider.owner.name"
+          />
+
+          <base-input
+              :label="'CPF'"
+              :placeholder="'111.222.333-44'"
+              :type="'number'"
+              v-model="provider.owner.socialSecurity"
+          />
+
+          <base-input
+              :label="'E-mail de Acesso'"
+              :placeholder="'exemplo@mail.com'"
+              :type="'text'"
+              v-model="provider.owner.email"
+          />
+
+          <base-input
+              :label="'Senha'"
+              :placeholder="'Mínimo 6 caracteres'"
+              v-model="provider.owner.password"
+          />
+        </div>
+      </div>
+
+      <!--Dados do Endereço-->
+      <div class="input-block f-column">
+        <div class="heather-block">
+          <span>Endereço</span>
+        </div>
+
+        <div class="inputs f-column">
+          <base-input
+              :label="'CEP'"
+              :placeholder="'XXXXX-XXX'"
+              :type="'number'"
+          />
+
+          <div class="address center f-row">
+            <div class="address-full">
+              <base-input
+                  :label="'Rua/Logradouro'"
+                  :placeholder="'Nome da Rua'"
+                  :type="'text'"
+              />
+            </div>
+
+            <div class="address-small">
+              <base-input
+                  :label="'Número'"
+                  :placeholder="'000'"
+                  :type="'number'"
+              />
+            </div>
+          </div>
+
+          <div class="address center f-row">
+            <div class="address-full">
+              <base-input
+                  :label="'Cidade'"
+                  :placeholder="'Nome da Cidade'"
+                  :type="'text'"
+              />
+            </div>
+
+            <div class="address-small">
+              <base-input
+                  :label="'Estado'"
+                  :placeholder="'UF'"
+                  :type="'text'"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--Uploads in Images-->
+      <div class="input-block f-column">
+        <div class="inputs f-column">
+          <base-file-input
+              :label="'Logo da Barbearia'"
+              @file-selected="getBase64Profile"
+          />
+
+          <base-file-input
+              :label="'Foto de Capa (para o topo do seu perfil)'"
+              @file-selected="getBase64Cover"
           />
         </div>
       </div>
     </form>
+
+    <base-button
+        class="button-action"
+        :label="'Finalizar Cadastro'"
+        :type="'primary'"
+        :function="'register'"
+        @continue-function="handleAction"
+    />
   </main>
 </template>
 
 <style scoped>
+  .container-register-provider {
+    padding: 24px;
+  }
 
+  .register-provider-form {
+    width: 100%;
+    display: flex;
+    row-gap: 48px;
+
+  }
+
+  .heather-block {
+    padding-bottom: 8px;
+    border-bottom: solid 1px var(--color-border);
+    margin-bottom: 24px;
+  }
+
+  .heather-block span {
+    font-size: 20px;
+    font-weight: var(--font-weight-bold);
+  }
+
+  .inputs {
+    display: flex;
+    row-gap: 16px;
+  }
+
+  .address {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .address-full {
+    width: 74%;
+  }
+
+  .address-small {
+    width: 20%;
+  }
+
+  .button-action {
+    margin-top: 40px;
+  }
 </style>

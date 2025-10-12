@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+
+:root {
+    /* 🎨 Paleta de Cores */
+    --color-background-primary: #111827; /* Fundo Primário */
+    --color-background-secondary: #1F2937; /* Fundo de Cards e Headers */
+    --color-accent-primary: #059669;       /* Ações, CTAs, Links */
+    --color-accent-secondary: #D97706;      /* Detalhes (ex: estrelas) */
+    --color-text-primary: #F9FAFB;         /* Títulos e textos principais */
+    --color-text-secondary: #9CA3AF;       /* Textos de apoio, legendas */
+    --color-border: #374151;               /* Bordas sutis */
+    --color-success: #22c55e;              /* Status positivo */
+    --color-danger: #ef4444;               /* Ações destrutivas */
+    --color-info: #3b82f6;                 /* Indicadores */
+
+    /* ✒️ Tipografia */
+    --font-family-primary: 'Sora', sans-serif;
+
+    /* Font Weights */
+    --font-weight-regular: 400;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+
+    /* Font Sizes */
+    --font-size-h1: 28px;      /* Título de Página */
+    --font-size-h2: 24px;      /* Título de Seção */
+    --font-size-h3: 20px;      /* Título de Card */
+    --font-size-body: 16px;    /* Corpo de Texto */
+    --font-size-button: 16px;  /* Botões */
+    --font-size-input: 14px;   /* Texto de Apoio/Input */
+    --font-size-caption: 12px; /* Legendas */
+
+    /* 📐 Espaçamento (Base 8px) */
+    --spacing-sm: 8px;   /* Pequeno */
+    --spacing-md: 16px;  /* Médio */
+    --spacing-lg: 24px;  /* Grande */
+    --spacing-xl: 32px;  /* Extra Grande */
+
+    /* ⭕ Raio da Borda (Border Radius) */
+    --radius-md: 12px;   /* Inputs */
+    --radius-lg: 16px;   /* Botões */
+    --radius-xl: 24px;   /* Cards */
+    --radius-full: 50%;  /* Avatares */
+
+    /* ✨ Iconografia */
+    --icon-size-default: 24px;
+    --icon-stroke-width-default: 2px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--color-background-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-family-primary);
+    font-size: var(--font-size-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}

@@ -14,3 +14,10 @@ export { default as BaseFileInput } from '@/components/base/BaseFileInput.vue';
 export { default as LightLogo } from '@/components/ui/LightLogo.vue';
 //export { default as DarkLogo } from '@/components/ui/DarkLogo.vue';
 export { default as CardHeather } from '@/components/ui/CardHeather.vue';
+export { default as DayScheduleCard } from '@/components/ui/DayScheduleCard.vue';
+
+
+/*################__Onboarding__################*/
+export { default as StepOneProvider } from '@/components/onboarding/steps/provider/StepOneProvider.vue';
+export { default as StepTwoProvider } from '@/components/onboarding/steps/provider/StepTwoProvider.vue';
+export { default as StepThreeProvider } from '@/components/onboarding/steps/provider/StepThreeProvider.vue';

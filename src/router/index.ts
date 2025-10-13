@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 //import HomePage from '@/views/HomePage.vue';
 import LoginPage from "@/pages/common/LoginPage.vue";
 import RegisterProviderPage from "@/pages/providers/RegisterProviderPage.vue";
+import BarberOnboardingBarber from "@/components/onboarding/BarberOnboardingBarber.vue";
 
 const routes = [
     /*{
@@ -18,6 +19,11 @@ const routes = [
         path: '/provider-register',
         name: 'RegisterProvider',
         component: RegisterProviderPage,
+    },
+    {
+        path: '/onboarding',
+        name: 'BarberOnboardingBarber',
+        component: BarberOnboardingBarber,
     }
 ];
 

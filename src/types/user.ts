@@ -1,3 +1,6 @@
+import type { CreateService } from "@/types/service.ts";
+import type { OpeningHours, WorkingHour } from "@/types/service.ts";
+
 export type Address = {
     zipCode: String,
     street: String,
@@ -23,4 +26,13 @@ export type RegisterProvider = {
     profile: String,
     owner: User;
     address: Address;
+}
+
+export type OnboardingProvider = {
+    profileImage: String | null,
+    coverImage: String | null,
+    description: String,
+    address: Address,
+    workingHours: WorkingHour[],
+    service: CreateService,
 }

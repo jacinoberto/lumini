@@ -14,6 +14,9 @@ export default defineComponent({
         this.$emit('continue-function', 'login');
       } else if (this.function === 'register') {
         this.$emit('continue-function', 'register');
+      } else if (this.function === 'nextStep') {
+        console.log('Próximo Step')
+        this.$emit('next-step', 'next-step');
       }
     }
   }

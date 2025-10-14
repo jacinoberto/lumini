@@ -24,8 +24,9 @@ export default defineComponent({
 
   props: {
     src: {
-      type: String,
-      default: '',
+      type: String ,
+      default: null,
+      required: false
     },
     name: {
       type: String,

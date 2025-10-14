@@ -1,8 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 //import HomePage from '@/views/HomePage.vue';
 import LoginPage from "@/pages/common/LoginPage.vue";
-import RegisterProviderPage from "@/pages/providers/RegisterProviderPage.vue";
 import BarberOnboardingBarber from "@/components/onboarding/BarberOnboardingBarber.vue";
+
+import { RegisterProviderPage, DashboardProviderPage} from "@/pages";
+
+const providerUrl = '/pr/app';
 
 const routes = [
     /*{
@@ -16,14 +19,19 @@ const routes = [
         component: LoginPage,
     },
     {
-        path: '/provider-register',
+        path: '/pr/provider-register',
         name: 'RegisterProvider',
         component: RegisterProviderPage,
     },
     {
-        path: '/onboarding',
+        path: '/pr/onboarding',
         name: 'BarberOnboardingBarber',
         component: BarberOnboardingBarber,
+    },
+    {
+        path: providerUrl + '/dashboard',
+        name: 'Dashboard',
+        component: DashboardProviderPage,
     }
 ];
 

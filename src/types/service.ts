@@ -22,3 +22,11 @@ export type OpeningHours = {
     start: string,
     end: string
 }
+
+export type Appointment = {
+    id: string,
+    profile: string | null;
+    name: string;
+    service: string;
+    hour: string;
+};

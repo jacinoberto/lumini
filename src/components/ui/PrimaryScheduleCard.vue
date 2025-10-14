@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, type PropType } from 'vue';
 import BaseAvatar from '@/components/base/BaseAvatar.vue';
 
 import type { Appointment } from '@/types/service.ts';

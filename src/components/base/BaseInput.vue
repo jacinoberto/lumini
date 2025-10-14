@@ -1,10 +1,14 @@
 <script lang="ts">
-import { defineComponent, PropType } from 'vue'
+import { defineComponent, type PropType } from 'vue'
 
 export default defineComponent({
   name: "BaseInput",
   props: {
-    modelValue: String as PropType<string>,
+    // CORREÇÃO AQUI: Adicionamos 'null' aos tipos permitidos
+    modelValue: {
+      type: [String, Number, null] as PropType<string | number | null>,
+      default: ''
+    },
     label: String,
     placeholder: String,
     type: String,
@@ -14,11 +18,10 @@ export default defineComponent({
   emits: ['update:modelValue'],
   computed: {
     value: {
-      get(): string | number | undefined {
-        // 2. O 'get' deve ler da prop correta: "modelValue"
+      get(): string | number | null | undefined {
         return this.modelValue;
       },
-      set(newValue: string | number): void {
+      set(newValue: string | number | null): void {
         this.$emit('update:modelValue', newValue);
       }
     }

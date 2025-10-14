@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, PropType, computed } from 'vue';
+import { defineComponent, type PropType, computed } from 'vue';
 import { DayScheduleCard } from '@/components';
 import type { OnboardingProvider } from '@/types/user';
 
@@ -33,7 +33,7 @@ export default defineComponent({
       <DayScheduleCard
           v-for="(day, index) in formData.workingHours"
           :key="index"
-          v-model="formData.workingHours[index]"
+          v-model="formData.workingHours[index]!"
       />
     </div>
   </main>

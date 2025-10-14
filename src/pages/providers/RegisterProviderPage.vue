@@ -75,13 +75,18 @@ export default defineComponent({
     },
     async getAddressByZipCode(zipCode: string) {
       if (zipCode.length === 8) {
-        this.address = await getAddress(zipCode);
-        this.provider.address.street = this.address.data.logradouro;
-        this.provider.address.area = this.address.data.bairro;
-        this.provider.address.city = this.address.data.localidade;
-        this.provider.address.state = this.address.data.uf;
+        try {
+          // MUDANÇA: Armazene a resposta em uma variável local 'response'
+          const response = await getAddress(zipCode);
 
-        console.log('endereço: ', this.provider.address)
+          // Agora use 'response' para preencher os dados
+          this.provider.address.street = response.data.logradouro;
+          this.provider.address.area = response.data.bairro;
+          this.provider.address.city = response.data.localidade;
+          this.provider.address.state = response.data.uf;
+        } catch (error) {
+          console.error("Erro ao buscar CEP:", error);
+        }
       }
     }
   }
@@ -177,7 +182,7 @@ export default defineComponent({
               :placeholder="'XXXXX-XXX'"
               :type="'number'"
               v-model="provider.address.zipCode"
-              @keyup="getAddressByZipCode(this.provider.address.zipCode)"
+              @keyup="getAddressByZipCode(provider.address.zipCode)"
           />
 
           <div class="address center f-row">

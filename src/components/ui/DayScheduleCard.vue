@@ -1,10 +1,9 @@
 <script lang="ts">
-import { defineComponent, PropType, computed } from 'vue';
+import { defineComponent, type PropType, computed } from 'vue';
 import BaseToggle from '@/components/base/BaseToggle.vue';
-
+import type { WorkingHour } from '@/types/service';
 // Este é o tipo que o componente espera receber via v-model
 // Certifique-se de que ele existe no seu arquivo de tipos
-export type { WorkingHour } from '@/types/service.ts';
 
 export default defineComponent({
   name: 'DayScheduleCard',

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, PropType, computed } from 'vue';
+import { defineComponent, type PropType, computed } from 'vue';
 import type { OnboardingProvider } from '@/types/user'; // Mudei o caminho para o seu tipo
 import { BaseFileInput, BaseTextarea, BaseInput } from "@/components";
 

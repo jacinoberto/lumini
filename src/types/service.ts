@@ -1,5 +1,5 @@
 export type CreateService = {
-    service: String,
+    service: string,
     price: number,
     duration: number
 }
@@ -12,9 +12,9 @@ export type WorkingHour = {
 };
 
 export type OperatingDays = {
-    weekdays: Boolean,
-    saturday: Boolean,
-    sunday: Boolean
+    weekdays: boolean,
+    saturday: boolean,
+    sunday: boolean
 }
 
 export type OpeningHours = {

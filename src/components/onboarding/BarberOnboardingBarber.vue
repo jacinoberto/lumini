@@ -55,6 +55,8 @@ import getAddress from '@/services/viaCepApi.ts';
 import { BaseButton, StepOneProvider, StepTwoProvider, StepThreeProvider } from '@/components'
 import userMock from '@/mock/userMock.ts';
 
+import type { WorkingHour } from '@/types/service'; // Importe o tipo
+
 export default defineComponent({
   name: "BarberOnboardingBarber",
   components: {
@@ -85,8 +87,17 @@ export default defineComponent({
         },
         workingHours: {
           $each: {
-            start_time: { required: requiredIf((item) => item.is_open) },
-            end_time: { required: requiredIf((item) => item.is_open) },
+            // Usamos 'function' para que o 'this' se refira ao item do array
+            start_time: {
+              required: requiredIf(function(this: WorkingHour) {
+                return this.is_open;
+              })
+            },
+            end_time: {
+              required: requiredIf(function(this: WorkingHour) {
+                return this.is_open;
+              })
+            },
           }
         },
         service: {
@@ -111,9 +122,17 @@ export default defineComponent({
       if (this.stepValue === 3) return 'end';
       return 'beginning';
     },
-    stepTitle(): string {
+    stepTitle(): string | undefined {
       const titles = ["Perfil da Barbearia", "Seus Horários", "Primeiro Serviço"];
-      return titles[this.stepValue - 1] || titles[0];
+      const title = titles[this.stepValue - 1]; // Isso pode ser 'string | undefined'
+
+      // Verificamos explicitamente se 'title' é uma string válida
+      if (title) {
+        return title;
+      }
+
+      // Se não for, retornamos um valor padrão que COM CERTEZA é uma string
+      return titles[0];
     },
     buttonName(): string {
       if (this.stepValue < 3) return 'Próximo';

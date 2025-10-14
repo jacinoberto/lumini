@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, PropType } from 'vue';
+import { defineComponent, type PropType } from 'vue';
 import ClientHeader from './ClientHeader.vue';
 import BarberHeader from './BarberHeader.vue';
 

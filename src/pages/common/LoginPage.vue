@@ -37,7 +37,7 @@ export default defineComponent({
     setRegistration() {
       if (this.role === 'provider')
       {
-        this.to = '/provider-register';
+        this.to = '/pr/provider-register';
       } else {
         this.to = '/client-register';
       }

@@ -56,9 +56,6 @@ export default defineComponent({
 
 <template>
   <main class="container-login-page main-container-default">
-    <div class="soon">
-      <light-logo />
-    </div>
 
     <base-card
       :size="'lg'"
@@ -112,9 +109,14 @@ export default defineComponent({
 </template>
 
 <style scoped>
+.container-login-page {
+  justify-content: center;
+}
+
   .soon {
     margin-bottom: 40px;
   }
+
   .heather-login-page {
     flex-direction: column;
     text-align: center;

@@ -3,7 +3,14 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginPage from "@/pages/common/LoginPage.vue";
 import BarberOnboardingBarber from "@/components/onboarding/BarberOnboardingBarber.vue";
 
-import { RegisterProviderPage, DashboardProviderPage} from "@/pages";
+import {
+    RegisterProviderPage,
+    DashboardProviderPage,
+    ServicesProviderPage,
+    ServiceFormPage,
+    ManagerTeamPage,
+    AddTeamMemberPage,
+} from "@/pages";
 
 const providerUrl = '/pr/app';
 
@@ -32,6 +39,26 @@ const routes = [
         path: providerUrl + '/dashboard',
         name: 'Dashboard',
         component: DashboardProviderPage,
+    },
+    {
+        path: providerUrl + '/services',
+        name: 'Services',
+        component: ServicesProviderPage,
+    },
+    {
+        path: providerUrl + '/service',
+        name: 'Service',
+        component: ServiceFormPage,
+    },
+    {
+        path: providerUrl + '/barbers',
+        name: 'Barbers',
+        component: ManagerTeamPage,
+    },
+    {
+        path: providerUrl + '/barber',
+        name: '',
+        component: AddTeamMemberPage,
     }
 ];
 

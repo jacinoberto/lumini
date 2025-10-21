@@ -1,9 +1,3 @@
-export type CreateService = {
-    service: string,
-    price: number,
-    duration: number
-}
-
 export type WorkingHour = {
     day_name: string;
     is_open: boolean;
@@ -30,3 +24,17 @@ export type Appointment = {
     service: string;
     hour: string;
 };
+
+export type ReturnService = {
+    id: string,
+    service: string,
+    duration: number,
+    value: number
+}
+
+export type CreateService = {
+    service: string,
+    description: string,
+    value: number,
+    duration: number
+}

@@ -1,8 +1,6 @@
 <script lang="ts">
-import {defineComponent} from 'vue'
-
-import { TheHeader, ButtonCard, PrimaryScheduleCard, TheButtonNav } from "@/components";
-
+import { defineComponent } from 'vue';
+import { TheHeader, ButtonCard, PrimaryScheduleCard, TheButtonNav } from "@/components"; // Corrigido para TheButtonNav
 import type { kpiType } from "@/types/dashboard.ts";
 import type { Appointment } from "@/types/service.ts";
 
@@ -12,74 +10,35 @@ export default defineComponent({
     TheHeader,
     ButtonCard,
     PrimaryScheduleCard,
-    TheButtonNav
+    TheButtonNav // Corrigido para TheButtonNav
   },
   data() {
     return {
       kpis: [
-        {
-          info: 'appointments',
-          title: 'Hoje',
-          footer: 'agendamentos',
-          value: '12',
-          size: 'sm'
-        },
-        {
-          info: 'appointments',
-          title: 'Receita',
-          footer: 'este mês',
-          value: '8.4k',
-          size: 'sm'
-        },
-        {
-          info: 'appointments',
-          title: 'Avaliação',
-          footer: 'média',
-          value: '4.9',
-          size: 'sm'
-        }
+        { info: 'appointments', title: 'Hoje', footer: 'agendamentos', value: '12', size: 'sm' },
+        { info: 'appointments', title: 'Receita', footer: 'este mês', value: '8.4k', size: 'sm' },
+        { info: 'appointments', title: 'Avaliação', footer: 'média', value: '4.9', size: 'sm' }
       ] as kpiType[],
       options: [
-        {
-          icon: 'calendar',
-          info: 'Agendamentos'
-        },
-        {
-          icon: 'clock',
-          info: 'Meus Horários'
-        },
-        {
-          icon: 'scissors',
-          info: 'Serviços'
-        },
-        {
-          icon: 'user',
-          info: 'Barbeiros'
-        },
+        { icon: 'calendar', info: 'Agendamentos', routeName: 'Appointments' },
+        { icon: 'clock', info: 'Meus Horários', routeName: 'WorkingHours' },
+        { icon: 'scissors', info: 'Serviços', routeName: 'Services' },
+        { icon: 'users', info: 'Equipe', routeName: 'ManageTeam' },
       ],
       appointments: [
-        {
-          id: '1',
-          profile: null,
-          name: 'Jonas Nascimento',
-          service: 'Corte + Barba',
-          hour: '14:00',
-        },
-        {
-          id: '2',
-          profile: null,
-          name: 'Carlos Andrade',
-          service: 'Mullet',
-          hour: '15:30',
-        },
-        {
-          id: '2',
-          profile: null,
-          name: 'Maria Clara',
-          service: 'Corte Feminino',
-          hour: '17:00',
-        },
+        { id: '1', profile: null, name: 'Jonas Nascimento', service: 'Corte + Barba', hour: '14:00' },
+        { id: '2', profile: null, name: 'Carlos Andrade', service: 'Mullet', hour: '15:30' },
+        { id: '3', profile: null, name: 'Maria Clara', service: 'Corte Feminino', hour: '17:00' },
       ] as Appointment[],
+    }
+  },
+  methods: {
+    navigateToSection(routeName: string | undefined) {
+      if (routeName) {
+        this.$router.push({ name: routeName });
+      } else {
+        console.warn('Nome da rota não definido para esta opção.');
+      }
     }
   }
 })
@@ -98,13 +57,14 @@ export default defineComponent({
             :key="index"
             :icon="option.icon"
             :title="option.info"
+            @click="navigateToSection(option.routeName)"
         />
       </section>
 
       <section class="section-appointments f-column">
         <div class="title">
           <h2>Hoje</h2>
-          <RouterLink to="" class="link">
+          <RouterLink :to="{ name: 'Appointments' }" class="link">
             Ver todos
           </RouterLink>
         </div>
@@ -125,38 +85,33 @@ export default defineComponent({
 </template>
 
 <style scoped>
-/* 1. O Contêiner principal que ocupa a tela inteira */
+/* SEUS ESTILOS ORIGINAIS E CORRETOS PARA O DASHBOARD */
 .dashboard-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh; /* Ocupa 100% da altura da tela */
-  overflow: hidden; /* Impede o scroll na página inteira */
+  height: 100vh;
+  overflow: hidden;
   background-color: var(--color-background-primary);
 }
 
-/* 2. O conteúdo principal que cresce para preencher o espaço */
 .main-container-default {
-  flex-grow: 1; /* Faz o 'main' ocupar todo o espaço entre o header e a nav */
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Garante que o 'main' não crie scrollbars */
+  overflow: hidden;
   padding: 0 24px;
 }
 
-/* 3. As seções que NÃO devem crescer */
 .header-dashboard-provider-page,
 .button-nav,
 .section-options,
 .title {
-  flex-shrink: 0; /* Impede que estes elementos encolham */
+  flex-shrink: 0;
 }
-
-/* --- AJUSTES NOS SEUS ESTILOS --- */
 
 .section-options {
   width: 100%;
-  /* REMOVIDO: O margin-top é problemático com flexbox. O layout agora é controlado pelo flex. */
-  padding-top: 96px; /* Use padding para o espaçamento */
+  padding-top: 96px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
@@ -167,8 +122,8 @@ export default defineComponent({
   margin-top: 24px;
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* Faz esta seção crescer para preencher o 'main' */
-  min-height: 0; /* Correção de bug do flexbox para evitar overflow */
+  flex-grow: 1;
+  min-height: 0;
 }
 
 .title {
@@ -190,12 +145,11 @@ export default defineComponent({
   font-size: 14px;
 }
 
-/* 4. A ÁREA DE SCROLL */
 .appointments-list {
-  overflow-y: auto; /* A mágica acontece aqui: scroll vertical apenas nesta div */
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-bottom: 24px; /* Espaço no final da lista */
+  padding-bottom: 24px;
 }
 </style>

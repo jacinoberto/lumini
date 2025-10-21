@@ -25,13 +25,14 @@ export default defineComponent({
     goBack() {
       this.$router.go(-1);
     },
+    // --- ALTERAÇÃO AQUI ---
     addTeamMember() {
-      // Lógica para abrir modal/página de adicionar membro
-      console.log('Abrir formulário para adicionar membro');
+      // Navega para a rota nomeada 'AddTeamMember'
+      this.$router.push({ name: 'AddTeamMember' });
     },
     handleMemberOptions(memberId: number | string) {
-      // Lógica para abrir menu de opções (editar/remover) para o membro
       console.log('Abrir opções para o membro ID:', memberId);
+      // Adicionar lógica para editar/remover membro
     },
   },
 });

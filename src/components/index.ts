@@ -27,6 +27,7 @@ export { default as TheButtonNav } from '@/components/layouts/TheButtonNav.vue';
 
 /*################__Cards__################*/
 export { default as ServiceCard } from '@/components/cards/ServiceCard.vue';
+export { default as AppointmentCard } from '@/components/cards/AppointmentCard.vue';
 
 /*################__Onboarding__################*/
 export { default as StepOneProvider } from '@/components/onboarding/steps/provider/StepOneProvider.vue';

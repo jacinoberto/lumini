@@ -27,9 +27,14 @@ export default defineComponent({
       this.$router.go(-1);
     },
     addService() {
-      // Lógica para abrir um modal ou ir para a página de adicionar serviço
-      console.log('Abrir modal/página para adicionar serviço');
+      // Navega para a rota nomeada 'AddService' (que definimos no router/index.ts)
+      this.$router.push({ name: 'AddService' });
     },
+    // Lógica para editar/deletar (pode ser adicionada depois)
+    handleServiceOptions(serviceId: number | string) {
+      console.log('Abrir opções para serviço ID:', serviceId);
+      // Exemplo: this.$router.push({ name: 'EditService', params: { id: serviceId } });
+    }
   },
 });
 </script>
@@ -44,6 +49,7 @@ export default defineComponent({
             v-for="service in services"
             :key="service.id"
             :service="service"
+            @options-click="handleServiceOptions"
         />
       </div>
     </main>

@@ -194,7 +194,7 @@ export default defineComponent({
             services: [ // A API espera um array de serviços
               {
                 name: this.onboarding.service.service,
-                price: this.onboarding.service.price,
+                price: this.onboarding.service.value,
                 duration_minutes: this.onboarding.service.duration,
                 description: '', // Adicionar este campo se existir no seu formulário
               }

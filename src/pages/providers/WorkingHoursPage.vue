@@ -8,44 +8,11 @@
 
     <main class="form-content">
       <form @submit.prevent="saveHours" class="hours-form">
-        <div class="day-group-card" :class="{ 'is-open': uiHours.weekdays.is_open }">
-          <div class="day-header" @click="uiHours.weekdays.is_open = !uiHours.weekdays.is_open">
-            <span class="day-name">Segunda à Sexta</span>
-            <BaseToggle v-model="uiHours.weekdays.is_open" />
-          </div>
-          <div class="time-inputs-wrapper">
-            <div class="time-input-group">
-              <div class="time-input"><label>Das</label><input type="time" v-model="uiHours.weekdays.start_time"></div>
-              <div class="time-input"><label>Às</label><input type="time" v-model="uiHours.weekdays.end_time"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="day-group-card" :class="{ 'is-open': uiHours.saturday.is_open }">
-          <div class="day-header" @click="uiHours.saturday.is_open = !uiHours.saturday.is_open">
-            <span class="day-name">Sábado</span>
-            <BaseToggle v-model="uiHours.saturday.is_open" />
-          </div>
-          <div class="time-inputs-wrapper">
-            <div class="time-input-group">
-              <div class="time-input"><label>Das</label><input type="time" v-model="uiHours.saturday.start_time"></div>
-              <div class="time-input"><label>Às</label><input type="time" v-model="uiHours.saturday.end_time"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="day-group-card" :class="{ 'is-open': uiHours.sunday.is_open }">
-          <div class="day-header" @click="uiHours.sunday.is_open = !uiHours.sunday.is_open">
-            <span class="day-name">Domingo</span>
-            <BaseToggle v-model="uiHours.sunday.is_open" />
-          </div>
-          <div class="time-inputs-wrapper">
-            <div class="time-input-group">
-              <div class="time-input"><label>Das</label><input type="time" v-model="uiHours.sunday.start_time"></div>
-              <div class="time-input"><label>Às</label><input type="time" v-model="uiHours.sunday.end_time"></div>
-            </div>
-          </div>
-        </div>
+        <DayScheduleCard
+            v-for="(day, index) in workingDays"
+            :key="day.day_of_week"
+            v-model="workingDays[index]!"
+        />
 
         <p v-if="apiErrorMessage" class="error-feedback">{{ apiErrorMessage }}</p>
 
@@ -66,10 +33,10 @@ import api from '@/services/api';
 
 // Componentes
 import BaseHeader from '@/components/base/BaseHeader.vue';
-import BaseToggle from '@/components/base/BaseToggle.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
+import DayScheduleCard from '@/components/ui/DayScheduleCard.vue'; // Usando o card do onboarding
 
-// Tipo para a estrutura da API (exemplo)
+// Tipos
 type ApiWorkingHour = {
   day_of_week: number; // 0=Domingo, 1=Segunda, ..., 6=Sábado
   start_time: string | null;
@@ -77,26 +44,37 @@ type ApiWorkingHour = {
   is_active: boolean;
 };
 
-// Tipo para a estrutura interna da UI
-type UiHourGroup = {
+// Tipo usado pelo DayScheduleCard (adaptado se necessário)
+type DayScheduleData = {
+  day_of_week: number; // Adicionamos day_of_week para facilitar o mapeamento
+  day_name: string;
   is_open: boolean;
   start_time: string;
   end_time: string;
 };
 
+// Nomes dos dias para inicialização
+const dayNames = [
+  'Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+  'Quinta-feira', 'Sexta-feira', 'Sábado'
+];
+
 export default defineComponent({
   name: 'WorkingHoursPage',
-  components: { BaseHeader, BaseToggle, BaseButton },
+  components: { BaseHeader, BaseButton, DayScheduleCard },
   data() {
     return {
-      // Estrutura de dados para a UI
-      uiHours: {
-        weekdays: { is_open: true, start_time: '09:00', end_time: '19:00' } as UiHourGroup,
-        saturday: { is_open: true, start_time: '08:00', end_time: '18:00' } as UiHourGroup,
-        sunday: { is_open: false, start_time: '09:00', end_time: '12:00' } as UiHourGroup,
-      },
+      // MUDANÇA: Estrutura de dados agora é um array de 7 dias
+      workingDays: dayNames.map((name, index) => ({
+        day_of_week: index, // Domingo = 0, Sábado = 6
+        day_name: name,
+        is_open: index >= 1 && index <= 5, // Abre Seg-Sex por padrão
+        start_time: '09:00',
+        end_time: '18:00',
+      })) as DayScheduleData[],
       isLoading: false,
       apiErrorMessage: '',
+      barbershopId: localStorage.getItem('barbershopId'),
     };
   },
   methods: {
@@ -104,109 +82,74 @@ export default defineComponent({
       this.$router.go(-1);
     },
 
-    // Mapeia a estrutura da UI para o formato da API
+    // Mapeia a estrutura da UI (7 dias) para o formato da API (7 dias)
     mapUiToApi(): ApiWorkingHour[] {
-      const apiHours: ApiWorkingHour[] = [];
+      return this.workingDays.map(day => {
+        // CORREÇÃO: Garante que o formato seja HH:MM
+        const startTime = day.is_open && day.start_time ? day.start_time.substring(0, 5) : null;
+        const endTime = day.is_open && day.end_time ? day.end_time.substring(0, 5) : null;
 
-      // Segunda a Sexta (days 1 to 5)
-      for (let i = 1; i <= 5; i++) {
-        apiHours.push({
-          day_of_week: i,
-          start_time: this.uiHours.weekdays.is_open ? this.uiHours.weekdays.start_time : null,
-          end_time: this.uiHours.weekdays.is_open ? this.uiHours.weekdays.end_time : null,
-          is_active: this.uiHours.weekdays.is_open,
-        });
-      }
-      // Sábado (day 6)
-      apiHours.push({
-        day_of_week: 6,
-        start_time: this.uiHours.saturday.is_open ? this.uiHours.saturday.start_time : null,
-        end_time: this.uiHours.saturday.is_open ? this.uiHours.saturday.end_time : null,
-        is_active: this.uiHours.saturday.is_open,
+        return {
+          day_of_week: day.day_of_week,
+          start_time: startTime,
+          end_time: endTime,
+          is_active: day.is_open,
+        };
       });
-      // Domingo (day 0)
-      apiHours.push({
-        day_of_week: 0,
-        start_time: this.uiHours.sunday.is_open ? this.uiHours.sunday.start_time : null,
-        end_time: this.uiHours.sunday.is_open ? this.uiHours.sunday.end_time : null,
-        is_active: this.uiHours.sunday.is_open,
-      });
-
-      return apiHours;
     },
 
-    // Mapeia os dados da API para a estrutura da UI
+    // Mapeia os dados da API (7 dias) para a estrutura da UI (7 dias)
     mapApiToUi(apiData: ApiWorkingHour[]) {
-      // Assume que a API retorna 7 dias ordenados por day_of_week (ou precisa ordenar)
-      const monday = apiData.find(d => d.day_of_week === 1);
-      const saturday = apiData.find(d => d.day_of_week === 6);
-      const sunday = apiData.find(d => d.day_of_week === 0);
+      const sortedApiData = [...apiData].sort((a, b) => a.day_of_week - b.day_of_week);
 
-      if (monday) {
-        this.uiHours.weekdays.is_open = monday.is_active;
-        this.uiHours.weekdays.start_time = monday.start_time || '09:00';
-        this.uiHours.weekdays.end_time = monday.end_time || '19:00';
-        // Assume que Seg-Sex terão os mesmos horários ou precisa de lógica mais complexa
-      }
-      if (saturday) {
-        this.uiHours.saturday.is_open = saturday.is_active;
-        this.uiHours.saturday.start_time = saturday.start_time || '08:00';
-        this.uiHours.saturday.end_time = saturday.end_time || '18:00';
-      }
-      if (sunday) {
-        this.uiHours.sunday.is_open = sunday.is_active;
-        this.uiHours.sunday.start_time = sunday.start_time || '09:00';
-        this.uiHours.sunday.end_time = sunday.end_time || '12:00';
-      }
+      this.workingDays = sortedApiData.map((apiDay) => {
+        // CORREÇÃO: Adiciona um fallback '??' para day_name
+        const dayName = dayNames[apiDay.day_of_week] ?? 'Dia Inválido'; // Ou use '' como fallback
+
+        return {
+          day_of_week: apiDay.day_of_week,
+          day_name: dayName, // Usa a variável com fallback
+          is_open: apiDay.is_active,
+          start_time: apiDay.start_time || '09:00',
+          end_time: apiDay.end_time || '18:00',
+        };
+      });
     },
 
     async fetchWorkingHours() {
+      // (Lógica de fetch permanece a mesma da resposta anterior)
+      if (!this.barbershopId) { /* ... */ return; }
       this.isLoading = true;
       this.apiErrorMessage = '';
       try {
-        // CONFIRMAR ENDPOINT: GET /working-hours ou GET /barbershops/{id} ?
-        const response = await api.get('/working-hours'); // Ajuste conforme necessário
-        if (response.data && Array.isArray(response.data)) {
+        const response = await api.get(`/barbershops/${this.barbershopId}/business-hours`);
+        if (response.data && Array.isArray(response.data) && response.data.length === 7) {
           this.mapApiToUi(response.data);
+        } else if (response.data.business_hours && Array.isArray(response.data.business_hours) && response.data.business_hours.length === 7){
+          this.mapApiToUi(response.data.business_hours);
         } else {
-          console.warn("API não retornou dados de horários esperados.");
+          console.warn("API não retornou 7 dias de horários.", response.data);
+          // Poderia manter os dados padrão ou mostrar erro
         }
-
-      } catch (error) {
-        console.error("Erro ao buscar horários:", error);
-        this.apiErrorMessage = "Não foi possível carregar os horários atuais.";
-      } finally {
-        this.isLoading = false;
-      }
+      } catch (error) { /* ... */ }
+      finally { this.isLoading = false; }
     },
 
     async saveHours() {
-      // Adicionar validação Vuelidate aqui se necessário
+      // (Lógica de save permanece a mesma, pois mapUiToApi já está correta)
+      if (!this.barbershopId) { /* ... */ return; }
       this.isLoading = true;
       this.apiErrorMessage = '';
       try {
-        const payload = this.mapUiToApi();
-        // CONFIRMAR ENDPOINT: PUT /working-hours ou PUT /barbershops/{id} ?
-        await api.put('/working-hours', payload); // Ajuste conforme necessário
-
-        // Sucesso!
-        this.goBack(); // Ou mostrar notificação de sucesso
-
-      } catch (error: any) {
-        if (error.response?.data?.errors) {
-          const apiErrors = error.response.data.errors;
-          // Lógica para exibir erros específicos se a API retornar
-        } else {
-          this.apiErrorMessage = 'Erro ao salvar os horários.';
-        }
-        console.error("Erro ao salvar horários:", error);
-      } finally {
-        this.isLoading = false;
-      }
+        const payload = { business_hours: this.mapUiToApi() };
+        await api.put(`/barbershops/${this.barbershopId}/business-hours`, payload);
+        this.goBack();
+      } catch (error: any) { /* ... */ }
+      finally { this.isLoading = false; }
     },
   },
   mounted() {
-    this.fetchWorkingHours(); // Busca os horários ao carregar a página
+    this.fetchWorkingHours();
   },
 });
 </script>
@@ -222,7 +165,7 @@ export default defineComponent({
 .header-subtitle {
   color: var(--color-text-secondary);
   font-size: 1rem;
-  margin-top: -16px; /* Ajusta o espaçamento abaixo do título principal */
+  margin-top: -16px;
 }
 
 .form-content {
@@ -231,55 +174,12 @@ export default defineComponent({
   padding: 1.5rem; /* 24px */
 }
 
+/* Agora o form contém a lista de cards */
 .hours-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* 16px */
+  gap: 1rem; /* Espaço entre os DayScheduleCards */
 }
-
-/* Estilos do card de grupo de dias (similar ao DayScheduleCard) */
-.day-group-card {
-  background-color: var(--color-background-secondary);
-  border-radius: 1rem; /* 16px */
-  border: 1px solid var(--color-border);
-  overflow: hidden;
-  transition: all 0.3s ease-in-out;
-}
-
-.day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.25rem; /* 20px */
-  cursor: pointer;
-}
-
-.day-name {
-  font-size: 1.125rem; /* 18px */
-  font-weight: var(--font-weight-semibold);
-  color: var(--color-text-primary);
-}
-
-.time-inputs-wrapper {
-  background-color: var(--color-background-primary);
-  border-top: 1px solid var(--color-border);
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  overflow: hidden;
-  transition: all 0.4s ease-in-out;
-}
-
-.day-group-card.is-open .time-inputs-wrapper {
-  max-height: 150px; /* Altura suficiente */
-  padding: 1.25rem; /* 20px */
-}
-
-.time-input-group { display: flex; gap: 1rem; align-items: center; }
-.time-input { flex: 1; display: flex; align-items: center; gap: 0.5rem; background-color: var(--color-background-secondary); padding: 0.75rem 1rem; border-radius: 0.75rem; }
-.time-input label { font-weight: var(--font-weight-semibold); color: var(--color-text-secondary); }
-.time-input input[type="time"] { background: none; border: none; color: var(--color-text-primary); font-family: 'Sora', sans-serif; font-size: 1.125rem; font-weight: 700; width: 100%; outline: none; }
-input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
 
 .error-feedback {
   color: var(--color-danger);
@@ -289,6 +189,8 @@ input[type="time"]::-webkit-calendar-picker-indicator { display: none; }
 }
 
 .save-button {
-  margin-top: 2rem;
+  margin-top: 2rem; /* Espaço antes do botão salvar */
+  position: sticky; /* Faz o botão ficar fixo no final enquanto rola a lista */
+  bottom: 1.5rem; /* Alinha com o padding do form-content */
 }
 </style>

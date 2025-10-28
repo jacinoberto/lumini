@@ -124,12 +124,15 @@ export default defineComponent({
         this.$router.push({ name: 'BarberOnboardingBarber' });
 
       } catch (error: any) {
-        if (error.response?.data?.errors) {
-          const apiErrors = error.response.data.errors;
-          const firstErrorKey = Object.keys(apiErrors)[0];
-          this.apiErrorMessage = apiErrors[firstErrorKey][0];
+        const apiErrors = error.response?.data?.errors || {}; // Supondo que apiErrors venha daqui
+        const errorKeys = Object.keys(apiErrors);
+        const firstErrorKey = errorKeys.length > 0 ? errorKeys[0] : undefined;
+
+        if (firstErrorKey && apiErrors[firstErrorKey]) {
+          this.apiErrorMessage = apiErrors[firstErrorKey][0]; // Acessa apenas se a chave existir
         } else {
-          this.apiErrorMessage = 'Não foi possível completar o cadastro.';
+          // Define uma mensagem padrão caso não haja erros específicos ou a estrutura seja inesperada
+          this.apiErrorMessage = error.response?.data?.message || 'Ocorreu um erro desconhecido.';
         }
       } finally {
         this.isLoading = false;

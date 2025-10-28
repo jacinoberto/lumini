@@ -1,11 +1,11 @@
 <template>
   <div class="add-member-layout">
-    <BaseHeader title="Adicionar Novo Barbeiro" @click="goBack" />
+    <BaseHeader :title="pageTitle" @click="goBack" />
 
     <main class="form-content">
       <form @submit.prevent="saveBarber" class="add-member-form">
         <div class="avatar-section">
-          <BaseAvatar :src="formData.avatar" :name="formData.name" size="lg" />
+          <BaseAvatar :src="formData?.avatar" :name="formData?.name" size="lg" />
           <button type="button" class="change-photo-btn" @click="triggerFileInput">
             Escolher Foto
           </button>
@@ -20,8 +20,8 @@
             label="Nome do Profissional"
             placeholder="Ex: Carlos Eduardo"
             v-model="formData.name"
-            :error="v$.formData.name.$error"
-            :errorMessage="v$.formData.name.$errors[0]?.$message"
+            :error="v$.formData?.name?.$error"
+            :errorMessage="v$.formData?.name?.$errors?.[0]?.$message"
         />
 
         <BaseTextarea
@@ -29,17 +29,18 @@
             placeholder="Ex: Cortes clássicos, Barboterapia"
             v-model="formData.specialties"
             :rows="3"
-            :error="v$.formData.specialties.$error"
-            :errorMessage="v$.formData.specialties.$errors[0]?.$message"
+            :error="v$.formData?.specialties?.$error"
+            :errorMessage="v$.formData?.specialties?.$errors?.[0]?.$message"
         />
 
         <p v-if="apiErrorMessage" class="error-feedback">{{ apiErrorMessage }}</p>
 
         <BaseButton
             class="save-button"
-            label="Salvar Barbeiro"
+            :label="buttonLabel"
             type="primary"
             :disabled="isLoading"
+            buttonType="submit"
         />
       </form>
     </main>
@@ -60,10 +61,11 @@ import BaseAvatar from '@/components/base/BaseAvatar.vue';
 import BaseInput from '@/components/base/BaseInput.vue';
 import BaseTextarea from '@/components/base/BaseTextarea.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
-import BaseFileInput from '@/components/base/BaseFileInput.vue'; // Importamos o file input
+import BaseFileInput from '@/components/base/BaseFileInput.vue';
 
 export default defineComponent({
   name: 'AddTeamMemberPage',
+  // Certifique-se de registrar todos os componentes importados
   components: {
     BaseHeader,
     BaseAvatar,
@@ -72,8 +74,13 @@ export default defineComponent({
     BaseButton,
     BaseFileInput,
   },
+  props: {
+    memberId: {
+      type: String,
+      required: false,
+    },
+  },
   setup() {
-    // Referência para o BaseFileInput escondido
     const fileInput = ref<InstanceType<typeof BaseFileInput> | null>(null);
     return { v$: useVuelidate(), fileInput };
   },
@@ -82,10 +89,11 @@ export default defineComponent({
       formData: {
         name: '',
         specialties: '',
-        avatar: null as string | null, // Para armazenar o Base64 da imagem
+        avatar: null as string | null, // Base64
       },
       isLoading: false,
       apiErrorMessage: '',
+      barbershopId: localStorage.getItem('barbershopId'),
     };
   },
   validations() {
@@ -93,54 +101,98 @@ export default defineComponent({
       formData: {
         name: { required: helpers.withMessage('O nome é obrigatório.', required) },
         specialties: { required: helpers.withMessage('Informe as especialidades.', required) },
-        // Validação para o avatar pode ser adicionada se for obrigatório
+        // avatar: { required }, // Descomente se a foto for obrigatória
       },
     };
   },
+  computed: {
+    isEditMode(): boolean {
+      return !!this.memberId;
+    },
+    pageTitle(): string {
+      return this.isEditMode ? 'Editar Barbeiro' : 'Adicionar Novo Barbeiro';
+    },
+    buttonLabel(): string {
+      return this.isEditMode ? 'Salvar Alterações' : 'Salvar Barbeiro';
+    },
+  },
   methods: {
-    goBack() {
-      this.$router.go(-1);
+    goBack() { this.$router.go(-1); },
+    triggerFileInput() { this.fileInput?.openFilePicker(); },
+    handleAvatarUpload(base64: string | null) { this.formData.avatar = base64; },
+
+    async fetchMemberDetails() {
+      if (!this.memberId || !this.barbershopId) return;
+      this.isLoading = true;
+      this.apiErrorMessage = '';
+      try {
+        const response = await api.get(`/barbershops/${this.barbershopId}/barbers/${this.memberId}`);
+        const memberData = response.data;
+        this.formData.name = memberData.name;
+        this.formData.specialties = memberData.specialties;
+        this.formData.avatar = memberData.profile_image;
+      } catch (error) {
+        console.error("Erro ao buscar detalhes do membro:", error);
+        this.apiErrorMessage = "Não foi possível carregar os dados.";
+      } finally {
+        this.isLoading = false;
+      }
     },
-    triggerFileInput() {
-      // Chama o método 'openFilePicker' do BaseFileInput
-      this.fileInput?.openFilePicker();
-    },
-    handleAvatarUpload(base64: string | null) {
-      this.formData.avatar = base64;
-    },
+
     async saveBarber() {
+      if (!this.barbershopId) {
+        this.apiErrorMessage = "Erro: ID da barbearia não encontrado.";
+        return;
+      }
       this.apiErrorMessage = '';
       const isFormValid = await this.v$.$validate();
       if (!isFormValid) return;
 
       this.isLoading = true;
       try {
-        // ATENÇÃO: Confirme o endpoint e o payload com o Orion
-        // Exemplo: POST /barbers ou POST /team-members
         const payload = {
           name: this.formData.name,
           specialties: this.formData.specialties,
-          profile_image: this.formData.avatar, // Adapte o nome do campo se necessário
+          profile_image: this.formData.avatar,
         };
 
-        await api.post('/barbers', payload); // Ajuste o endpoint
+        if (this.isEditMode) {
+          await api.put(`/barbershops/${this.barbershopId}/barbers/${this.memberId}`, payload);
+        } else {
+          await api.post(`/barbershops/${this.barbershopId}/barbers`, payload);
+        }
 
-        // Sucesso! Volta para a tela anterior (lista da equipe)
-        this.goBack();
+        this.$router.push({ name: 'ManageTeam'});
 
       } catch (error: any) {
         if (error.response?.data?.errors) {
           const apiErrors = error.response.data.errors;
           const firstErrorKey = Object.keys(apiErrors)[0];
-          this.apiErrorMessage = apiErrors[firstErrorKey][0];
+
+          // CORREÇÃO: Verifique se firstErrorKey existe antes de usá-lo
+          if (firstErrorKey) {
+            // Pega a primeira mensagem de erro para a primeira chave encontrada
+            this.apiErrorMessage = apiErrors[firstErrorKey]?.[0] || 'Erro de validação desconhecido.';
+          } else {
+            // Fallback se apiErrors for um objeto vazio
+            this.apiErrorMessage = error.response.data.message || 'Ocorreu um erro de validação.';
+          }
+
+        } else if (error.response?.data?.message) {
+          this.apiErrorMessage = error.response.data.message;
         } else {
-          this.apiErrorMessage = 'Erro ao salvar o barbeiro. Tente novamente.';
+          this.apiErrorMessage = this.isEditMode ? 'Erro ao atualizar.' : 'Erro ao salvar.';
         }
         console.error("Erro ao salvar barbeiro:", error);
       } finally {
         this.isLoading = false;
       }
     },
+  },
+  mounted() {
+    if (this.isEditMode) {
+      this.fetchMemberDetails();
+    }
   },
 });
 </script>
@@ -149,13 +201,15 @@ export default defineComponent({
 .add-member-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* IMPORTANTE: Remova height: 100vh se o pai já controla a altura */
+  /* height: 100vh; */
+  height: 100%; /* Ocupa a altura dada pelo pai */
   background-color: var(--color-background-primary);
 }
 
 .form-content {
-  flex-grow: 1;
-  overflow-y: auto;
+  flex-grow: 1; /* Ocupa o espaço vertical disponível */
+  overflow-y: auto; /* Permite scroll SE o conteúdo for maior que o espaço */
   padding: 1.5rem; /* 24px */
 }
 
@@ -182,7 +236,6 @@ export default defineComponent({
   padding: 0.5rem;
 }
 
-/* Esconde o BaseFileInput visualmente, mas o mantém funcional */
 .hidden-file-input {
   position: absolute;
   width: 1px;

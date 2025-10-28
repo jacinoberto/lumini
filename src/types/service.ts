@@ -35,6 +35,13 @@ export type ReturnService = {
 export type CreateService = {
     service: string,
     description: string,
-    value: number,
+    value: number | null,
     duration: number
 }
+
+export type Service = {
+    id: number | string;
+    name: string;
+    duration: number; // em minutos
+    price: number; // em R$
+};

@@ -1,12 +1,11 @@
 <script lang="ts">
-import { defineComponent, type PropType } from 'vue';
+import { defineComponent, type PropType, computed } from 'vue';
 
-// Define o formato do objeto de serviço que o card espera
 type Service = {
   id: number | string;
   name: string;
-  duration: number; // em minutos
-  price: number; // em R$
+  duration: number;
+  price: number | string | null | undefined; // Permite receber string ou null temporariamente
 };
 
 export default defineComponent({
@@ -17,7 +16,17 @@ export default defineComponent({
       required: true,
     },
   },
-  emits: ['edit', 'delete'], // Eventos que o botão de opções pode disparar
+  emits: ['edit', 'delete'],
+  // MUDANÇA: Use uma computed property para formatar o preço com segurança
+  computed: {
+    formattedPrice(): string {
+      const price = Number(this.service.price); // Tenta converter para número
+      if (!isNaN(price)) { // Verifica se a conversão foi bem-sucedida
+        return price.toFixed(2).replace('.', ',');
+      }
+      return 'N/A'; // Ou '0,00' ou outra coisa se o preço for inválido
+    }
+  }
 });
 </script>
 
@@ -25,7 +34,7 @@ export default defineComponent({
   <div class="service-card">
     <div class="service-details">
       <h3 class="service-name">{{ service.name }}</h3>
-      <p class="service-info">{{ service.duration }}min - R$ {{ service.price.toFixed(2).replace('.', ',') }}</p>
+      <p class="service-info">{{ service.duration }}min - R$ {{ formattedPrice }}</p>
     </div>
     <button class="options-btn">
       <vue-feather type="more-vertical" size="20"></vue-feather>

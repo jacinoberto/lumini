@@ -15,54 +15,22 @@ export default function userMock(): OnboardingProvider {
             number: null
         },
         workingHours: [
-            {
-                day_name: 'Segunda-feira',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
-            {
-                day_name: 'Terça-feira',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
-            {
-                day_name: 'Quarta-feira',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
-            {
-                day_name: 'Quinta-feira',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
-            {
-                day_name: 'Sexta-feira',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
-            {
-                day_name: 'Sábado',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
-            {
-                day_name: 'Domingo',
-                is_open: false,
-                start_time: '00:00',
-                end_time: '00:00',
-            },
+            // ... your workingHours array ...
+            { day_name: 'Segunda-feira', is_open: false, start_time: '00:00', end_time: '00:00' },
+            { day_name: 'Terça-feira', is_open: false, start_time: '00:00', end_time: '00:00' },
+            { day_name: 'Quarta-feira', is_open: false, start_time: '00:00', end_time: '00:00' },
+            { day_name: 'Quinta-feira', is_open: false, start_time: '00:00', end_time: '00:00' },
+            { day_name: 'Sexta-feira', is_open: false, start_time: '00:00', end_time: '00:00' },
+            { day_name: 'Sábado', is_open: false, start_time: '00:00', end_time: '00:00' },
+            { day_name: 'Domingo', is_open: false, start_time: '00:00', end_time: '00:00' },
         ] as WorkingHour[],
+        // --- CORREÇÃO AQUI ---
         service: {
             service: '',
-            price: 0,
+            description: '', // Adiciona a propriedade description
+            value: null,     // Renomeia price para value e permite null
             duration: 15
-        }
+        } // Remove 'as CreateService' if TypeScript can infer it, otherwise keep it
     };
 
     return providerOnboarding;

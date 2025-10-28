@@ -15,10 +15,13 @@ if (VueFeather.name != null) {
 app.directive('mask', mask); // Registra v-mask
 app.use(router);
 
+axios.defaults.withCredentials = true;
 // --- LÓGICA CSRF ---
 // 2. Chama o endpoint para obter o cookie CSRF
 //    CONFIRME ESTE ENDPOINT com o backend (Orion). '/sanctum/csrf-cookie' é o padrão do Laravel Sanctum.
-axios.get('https://api-lumini.onrender.com/sanctum/csrf-cookie').then(() => {
+axios.get('https://api-lumini.onrender.com/sanctum/csrf-cookie', {
+    withCredentials: true
+}).then(() => {
     // 3. Monte o aplicativo SOMENTE APÓS obter o cookie com sucesso
     app.mount('#app');
 }).catch(error => {

@@ -1,37 +1,25 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import './assets/styles/main.css'; // Certifique-se que o caminho está correto
-import router from '@/router/index'; // Corrigido para remover '.ts'
+import './assets/styles/main.css';
+import router from '@/router/index';
 import VueFeather from 'vue-feather';
 import { mask } from 'vue-the-mask';
-import axios from 'axios';
+import api from './services/api';
 
 const app = createApp(App);
 
-// Registros globais
 if (VueFeather.name != null) {
     app.component(VueFeather.name, VueFeather);
 }
-app.directive('mask', mask); // Registra v-mask
+app.directive('mask', mask);
 app.use(router);
 
-axios.defaults.withCredentials = true;
-// --- LÓGICA CSRF ---
-// 2. Chama o endpoint para obter o cookie CSRF
-//    CONFIRME ESTE ENDPOINT com o backend (Orion). '/sanctum/csrf-cookie' é o padrão do Laravel Sanctum.
-axios.get('https://api-lumini.onrender.com/sanctum/csrf-cookie', {
-    withCredentials: true
-}).then(() => {
-    // 3. Monte o aplicativo SOMENTE APÓS obter o cookie com sucesso
-    app.mount('#app');
-}).catch(error => {
-    console.error("Erro crucial ao obter o cookie CSRF! A aplicação não será montada.", error);
-    // Você pode querer exibir uma mensagem de erro na tela aqui,
-    // pois sem o cookie, as requisições POST/PUT/DELETE falharão.
-    const rootElement = document.getElementById('app');
-    if (rootElement) {
-        rootElement.innerHTML = '<div style="color: red; text-align: center; padding-top: 50px;">Erro ao inicializar a aplicação. Verifique a conexão com a API.</div>';
-    }
-});
 
-// REMOVA a linha app.mount('#app') daqui, pois ela foi movida para dentro do .then()
+const token = localStorage.getItem('authToken');
+if (token) {
+    // Define o header padrão logo na inicialização se o token existir
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    console.log("Token carregado do localStorage para o Axios.");
+}
+
+app.mount('#app');

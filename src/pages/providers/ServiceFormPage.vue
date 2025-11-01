@@ -1,313 +1,367 @@
-<template>
-  <div class="service-form-layout">
-    <BaseHeader :title="pageTitle" @click="goBack" />
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
+import { serviceService, type CreateServiceData, type Service } from '@/services/serviceService';
 
-    <main class="form-content">
-      <form @submit.prevent="saveService" class="service-form">
-        <BaseInput
-            label="Nome do Serviço"
-            placeholder="Ex: Corte Masculino"
-            v-model="formData.name"
-            :error="v$.formData.name.$error"
-            :errorMessage="v$.formData.name.$errors[0]?.$message"
-        />
-php a
-        <BaseTextarea
-            label="Descrição Curta (Opcional)"
-            placeholder="Ex: Corte moderno com degradê baixo..."
-            v-model="formData.description"
-            :rows="3"
-        />
+const router = useRouter();
+const route = useRoute();
+const authStore = useAuthStore();
 
-        <div class="price-duration-row">
-          <BaseInput
-              label="Preço (R$)"
-              placeholder="40,00"
-              type="number"
-              step="0.01"
-              min="0"
-              v-model="formData.price"
-              :error="v$.formData.price.$error"
-              :errorMessage="v$.formData.price.$errors[0]?.$message"
-          />
-          <div class="input-group">
-            <label for="service-duration">Duração (min)</label>
-            <select
-                id="service-duration"
-                class="form-input duration-select"
-                v-model="formData.duration_minutes"
-                :class="{ 'has-error': v$.formData.duration_minutes.$error }"
-            >
-              <option :value="15">15 min</option>
-              <option :value="30">30 min</option>
-              <option :value="45">45 min</option>
-              <option :value="60">60 min</option>
-              <option :value="75">75 min</option>
-              <option :value="90">90 min</option>
-            </select>
-            <p v-if="v$.formData.duration_minutes.$error" class="error-message">
-              {{ v$.formData.duration_minutes.$errors[0]?.$message }}
-            </p>
-          </div>
-        </div>
+const serviceId = computed(() => route.params.id as string);
+const isEditing = computed(() => !!serviceId.value);
 
-        <p v-if="apiErrorMessage" class="error-feedback">{{ apiErrorMessage }}</p>
+const loading = ref(false);
+const loadingData = ref(false);
+const formData = ref({
+  name: '',
+  description: '',
+  price: '',
+  duration_minutes: ''
+});
 
-        <BaseButton
-            class="save-button"
-            :label="buttonLabel"
-            type="primary"
-            :disabled="isLoading"
-            buttonType="submit" />
-      </form>
-    </main>
-  </div>
-</template>
+const errors = ref({
+  name: '',
+  price: '',
+  duration_minutes: ''
+});
 
-<script lang="ts">
-import { defineComponent } from 'vue';
-import api from '@/services/api';
+async function loadService() {
+  if (!isEditing.value) return;
 
-// Validação
-import { useVuelidate } from '@vuelidate/core';
-import { required, numeric, minValue, helpers } from '@vuelidate/validators';
+  const barbershopId = authStore.barbershopId;
+  if (!barbershopId) return;
 
-// Componentes
-import BaseHeader from '@/components/base/BaseHeader.vue';
-import BaseInput from '@/components/base/BaseInput.vue';
-import BaseTextarea from '@/components/base/BaseTextarea.vue';
-import BaseButton from '@/components/base/BaseButton.vue';
+  try {
+    loadingData.value = true;
+    const response = await serviceService.getById(barbershopId, serviceId.value);
+    const service: Service = response.data || response;
 
-// Tipos (Adapte conforme a API)
-type ServiceFormData = {
-  name: string;
-  description: string;
-  price: number | null;
-  duration_minutes: number;
-};
-
-export default defineComponent({
-  name: 'ServiceFormPage',
-  components: { BaseHeader, BaseInput, BaseTextarea, BaseButton },
-  props: {
-    // Recebe o ID do serviço da rota (ex: /servicos/editar/:id) via props: true no router
-    id: {
-      type: String,
-      required: false,
-    },
-  },
-  setup() {
-    return { v$: useVuelidate() };
-  },
-  data() {
-    return {
-      formData: {
-        name: '',
-        description: '',
-        price: null,
-        duration_minutes: 30, // Valor padrão
-      } as ServiceFormData,
-      isLoading: false,
-      apiErrorMessage: '',
-      barbershopId: localStorage.getItem('barbershopId'), // Pega o ID salvo
+    // Preenche o formulário com os dados do serviço
+    formData.value = {
+      name: service.name,
+      description: service.description || '',
+      price: service.price.toString(),
+      duration_minutes: service.duration_minutes.toString()
     };
-  },
-  validations() {
-    return {
-      formData: {
-        name: { required: helpers.withMessage('O nome do serviço é obrigatório.', required) },
-        price: {
-          required: helpers.withMessage('O preço é obrigatório.', required),
-          numeric: helpers.withMessage('O preço deve ser um número.', numeric),
-          minValue: helpers.withMessage('O preço deve ser positivo.', minValue(0))
-        },
-        duration_minutes: { required: helpers.withMessage('A duração é obrigatória.', required) },
-      },
+  } catch (error: any) {
+    console.error('Erro ao carregar serviço:', error);
+    alert('Erro ao carregar serviço');
+    router.push({ name: 'Services' });
+  } finally {
+    loadingData.value = false;
+  }
+}
+
+function validateForm(): boolean {
+  errors.value = {
+    name: '',
+    price: '',
+    duration_minutes: ''
+  };
+
+  let isValid = true;
+
+  if (!formData.value.name.trim()) {
+    errors.value.name = 'Nome do serviço é obrigatório';
+    isValid = false;
+  }
+
+  if (!formData.value.price || parseFloat(formData.value.price) <= 0) {
+    errors.value.price = 'Preço deve ser maior que zero';
+    isValid = false;
+  }
+
+  if (!formData.value.duration_minutes || parseInt(formData.value.duration_minutes) <= 0) {
+    errors.value.duration_minutes = 'Duração deve ser maior que zero';
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+async function handleSubmit() {
+  if (!validateForm()) return;
+
+  const barbershopId = authStore.barbershopId;
+  if (!barbershopId) return;
+
+  try {
+    loading.value = true;
+
+    const data: CreateServiceData = {
+      name: formData.value.name,
+      description: formData.value.description || undefined,
+      price: parseFloat(formData.value.price),
+      duration_minutes: parseInt(formData.value.duration_minutes),
+      is_active: true
     };
-  },
-  computed: {
-    isEditMode(): boolean {
-      return !!this.id; // Se 'id' existe na prop, estamos editando
-    },
-    pageTitle(): string {
-      return this.isEditMode ? 'Editar Serviço' : 'Adicionar Novo Serviço';
-    },
-    buttonLabel(): string {
-      return this.isEditMode ? 'Salvar Alterações' : 'Salvar Serviço';
-    },
-  },
-  methods: {
-    goBack() {
-      this.$router.go(-1);
-    },
-    async fetchServiceDetails() {
-      if (!this.id || !this.barbershopId) return; // Precisa do ID da barbearia também? Confirme com Orion.
-      this.isLoading = true;
-      this.apiErrorMessage = '';
-      try {
-        // CONFIRMAR ENDPOINT GET com Orion (ex: /barbershops/{barbershopId}/services/{serviceId})
-        const response = await api.get(`/services/${this.id}`); // Ajuste endpoint se necessário
-        const serviceData = response.data;
 
-        // Preenche o formulário com os dados da API
-        this.formData.name = serviceData.name;
-        this.formData.description = serviceData.description || '';
-        // Converte o preço de string (API) para number (formulário) se necessário
-        this.formData.price = typeof serviceData.price === 'string' ? parseFloat(serviceData.price) : serviceData.price;
-        this.formData.duration_minutes = serviceData.duration_minutes;
-
-      } catch (error) {
-        console.error("Erro ao buscar detalhes do serviço:", error);
-        this.apiErrorMessage = "Não foi possível carregar os dados do serviço.";
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async saveService() {
-      if (!this.barbershopId) {
-        this.apiErrorMessage = "Erro: ID da barbearia não encontrado.";
-        return;
-      }
-      this.apiErrorMessage = '';
-      const isFormValid = await this.v$.$validate();
-      if (!isFormValid) return;
-
-      this.isLoading = true;
-      try {
-        // Monta o payload com os campos esperados pela API
-        const payload = {
-          name: this.formData.name,
-          // Converte o preço para formato numérico adequado (ex: 45.00)
-          price: Number(this.formData.price).toFixed(2),
-          duration_minutes: this.formData.duration_minutes,
-          description: this.formData.description || null, // Envia null se vazio? Confirme com Orion.
-        };
-
-        if (this.isEditMode) {
-          // Modo Edição: Chama PUT
-          // CONFIRMAR ENDPOINT PUT com Orion (ex: /barbershops/{barbershopId}/services/{serviceId})
-          await api.put(`/services/${this.id}`, payload); // Ajuste endpoint se necessário
-        } else {
-          // Modo Adição: Chama POST
-          await api.post(`/barbershops/${this.barbershopId}/services`, payload);
-        }
-
-        // Sucesso! Volta para a tela anterior (lista de serviços)
-        this.goBack();
-
-      } catch (error: any) {
-        const apiErrors = error.response?.data?.errors || {};
-        const errorKeys = Object.keys(apiErrors);
-        const firstErrorKey = errorKeys.length > 0 ? errorKeys[0] : undefined;
-
-        if (firstErrorKey && apiErrors[firstErrorKey] && apiErrors[firstErrorKey].length > 0) {
-          // Acessa apenas se a chave existe e o array de erros não está vazio
-          this.apiErrorMessage = apiErrors[firstErrorKey][0];
-        } else {
-          // Fallback para uma mensagem genérica
-          this.apiErrorMessage = error.response?.data?.message || 'Erro ao salvar o serviço.';
-        }
-        console.error("Erro ao salvar serviço:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-  },
-  mounted() {
-    // Se estiver no modo de edição, busca os dados do serviço ao carregar a página
-    if (this.isEditMode) {
-      this.fetchServiceDetails();
+    if (isEditing.value) {
+      await serviceService.update(barbershopId, serviceId.value, {
+        ...data,
+        id: serviceId.value
+      });
+      alert('Serviço atualizado com sucesso!');
+    } else {
+      await serviceService.create(barbershopId, data);
+      alert('Serviço criado com sucesso!');
     }
-  },
+
+    router.push({ name: 'Services' });
+  } catch (error: any) {
+    console.error('Erro ao salvar serviço:', error);
+    alert(error.response?.data?.message || 'Erro ao salvar serviço');
+  } finally {
+    loading.value = false;
+  }
+}
+
+function goBack() {
+  router.push({ name: 'Services' });
+}
+
+onMounted(() => {
+  loadService();
 });
 </script>
 
+<template>
+  <div class="form-screen">
+    <header class="form-header">
+      <button class="back-btn" @click="goBack">← Voltar para Serviços</button>
+      <h1>{{ isEditing ? 'Editar Serviço' : 'Adicionar Novo Serviço' }}</h1>
+    </header>
+
+    <!-- Loading State ao carregar dados para edição -->
+    <div v-if="loadingData" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Carregando dados do serviço...</p>
+    </div>
+
+    <main v-else class="form-content">
+      <form @submit.prevent="handleSubmit">
+        <div class="input-group">
+          <label for="service-name">Nome do Serviço</label>
+          <input
+              type="text"
+              id="service-name"
+              class="form-input"
+              :class="{ 'error': errors.name }"
+              placeholder="Ex: Low Fade"
+              v-model="formData.name"
+          >
+          <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
+        </div>
+
+        <div class="input-group">
+          <label for="service-desc">Descrição Curta (Opcional)</label>
+          <textarea
+              id="service-desc"
+              class="form-input"
+              rows="3"
+              placeholder="Ex: Corte moderno com degradê baixo, finalizado com navalha."
+              v-model="formData.description"
+          ></textarea>
+        </div>
+
+        <div class="input-group-row">
+          <div class="input-group">
+            <label for="service-price">Preço (R$)</label>
+            <input
+                type="number"
+                id="service-price"
+                class="form-input"
+                :class="{ 'error': errors.price }"
+                placeholder="40,00"
+                step="0.01"
+                min="0"
+                v-model="formData.price"
+            >
+            <span v-if="errors.price" class="error-message">{{ errors.price }}</span>
+          </div>
+
+          <div class="input-group">
+            <label for="service-duration">Duração (min)</label>
+            <input
+                type="number"
+                id="service-duration"
+                class="form-input"
+                :class="{ 'error': errors.duration_minutes }"
+                placeholder="45"
+                min="1"
+                v-model="formData.duration_minutes"
+            >
+            <span v-if="errors.duration_minutes" class="error-message">{{ errors.duration_minutes }}</span>
+          </div>
+        </div>
+      </form>
+    </main>
+
+    <div class="cta-container">
+      <button
+          class="btn btn-primary"
+          @click="handleSubmit"
+          :disabled="loading || loadingData"
+      >
+        {{ loading ? 'Salvando...' : 'Salvar Serviço' }}
+      </button>
+    </div>
+  </div>
+</template>
+
 <style scoped>
-.service-form-layout {
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+
+.form-screen {
+  min-height: 100vh;
+  background-color: var(--color-background-primary);
+  padding-bottom: 120px;
+}
+
+.form-header {
+  padding: 3rem 1.5rem 1.5rem;
+  background-color: var(--color-background-secondary);
+}
+
+.back-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-family: 'Sora', sans-serif;
+}
+
+.back-btn:hover {
+  color: var(--color-accent-primary);
+}
+
+.form-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.loading-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background-color: var(--color-background-primary);
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  color: var(--color-text-secondary);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--color-border);
+  border-top-color: var(--color-accent-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .form-content {
-  flex-grow: 1;
-  overflow-y: auto;
-  padding: 1.5rem; /* 24px */
+  padding: 1.5rem;
 }
 
-.service-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem; /* 24px */
-}
-
-/* Container para alinhar Preço e Duração lado a lado */
-.price-duration-row {
-  display: flex;
-  gap: 1rem; /* 16px */
-  align-items: flex-start; /* Alinha pelo topo */
-}
-
-/* Cada grupo dentro da linha ocupa metade do espaço */
-.price-duration-row > * {
-  flex: 1;
-}
-
-/* Grupo de input para o select */
 .input-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .input-group label {
   font-weight: 600;
   color: var(--color-text-secondary);
+  font-size: 0.875rem;
 }
 
-/* Ajustes no select para combinar com BaseInput */
-.form-input.duration-select {
-  /* Adapte a altura e padding se necessário para alinhar visualmente */
-  height: 59px; /* Mesma altura do BaseInput */
-  padding: 0 1rem; /* Padding horizontal */
+.form-input {
+  width: 100%;
+  padding: 1rem;
   background-color: var(--color-background-secondary);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  border-radius: 0.75rem;
   color: var(--color-text-primary);
+  font-size: 1rem;
   font-family: 'Sora', sans-serif;
-  font-size: var(--font-size-button); /* Mesmo tamanho de fonte */
-  -webkit-appearance: none; /* Remove aparência padrão no Safari/Chrome */
-  appearance: none; /* Remove aparência padrão */
-  /* Adiciona ícone de seta customizado se desejar */
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239CA3AF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1em;
 }
 
-.form-input.duration-select:focus {
+.form-input:focus {
   outline: none;
   border-color: var(--color-accent-primary);
 }
 
-/* Estilo do Vuelidate para o select */
-.form-input.has-error {
-  border-color: var(--color-danger);
-}
-.error-message { /* Reutiliza o estilo de erro do BaseInput */
-  color: var(--color-danger);
-  font-size: var(--font-size-caption);
-  margin-top: -4px;
-}
-.error-feedback { /* Mensagem geral de erro da API */
-  color: var(--color-danger);
-  text-align: center;
-  font-weight: var(--font-weight-semibold);
-  margin-top: 1rem;
+.form-input.error {
+  border-color: #ef4444;
 }
 
-.save-button {
-  margin-top: 2rem; /* Espaço antes do botão */
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: -0.25rem;
+}
+
+textarea.form-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.input-group-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-group-row .input-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.cta-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  background: linear-gradient(to top, var(--color-background-primary) 70%, transparent);
+  z-index: 100;
+}
+
+.btn {
+  display: inline-block;
+  width: 100%;
+  padding: 1.125rem;
+  border-radius: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.3s ease;
+  font-family: 'Sora', sans-serif;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-image: linear-gradient(to right, var(--color-accent-primary), #047857);
+  color: var(--color-text-primary);
+}
+
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.9;
 }
 </style>

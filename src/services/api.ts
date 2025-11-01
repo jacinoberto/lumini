@@ -1,50 +1,54 @@
-import axios from "axios";
+import axios, { type AxiosInstance, type AxiosError } from 'axios';
+import { useAuthStore } from '@/stores/authStore';
+import router from '@/router';
 
-const api = axios.create({
-    baseURL: 'https://api-lumini.onrender.com/api/',
-    timeout: 10000,
+// Configuração base da API
+const api: AxiosInstance = axios.create({
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    timeout: 30000,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
 });
 
+// Interceptor de Request - Adiciona token
 api.interceptors.request.use(
-    config => {
-        const token = localStorage.getItem('authToken');
+    (config) => {
+        const authStore = useAuthStore();
 
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        } else {
-            delete config.headers['Authorization'];
+        if (authStore.token) {
+            config.headers.Authorization = `Bearer ${authStore.token}`;
         }
 
         return config;
     },
-    error => {
-        console.error("Erro no interceptor de requisição Axios:", error);
+    (error) => {
         return Promise.reject(error);
     }
 );
 
+// Interceptor de Response - Trata erros
 api.interceptors.response.use(
-    response => {
+    (response) => {
         return response;
     },
-    error => {
-        if (error.response && error.response.status === 401) {
-            console.warn("Recebido erro 401. Deslogando usuário.");
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
-            localStorage.removeItem('barbershopId');
-            // Remove o header padrão do Axios, caso exista
-            delete api.defaults.headers.common['Authorization'];
+    (error: AxiosError) => {
+        const authStore = useAuthStore();
 
-            window.location.href = '/';
+        // Token expirado ou inválido
+        if (error.response?.status === 401) {
+            authStore.clearAuth();
+            router.push({ name: 'Login' });
         }
+
+        // Erro de servidor
+        if (error.response?.status === 500) {
+            console.error('Erro no servidor:', error);
+        }
+
         return Promise.reject(error);
     }
 );
-
 
 export default api;

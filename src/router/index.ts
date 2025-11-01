@@ -1,140 +1,214 @@
+// src/router/index.ts
+
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore';
 
-// --- Layout Genérico para Rotas Aninhadas ---
-// Certifique-se de que este componente existe em src/layouts/RouterOutlet.vue
-// Ele deve conter apenas <RouterView />
-import RouterOutlet from '@/components/layouts/RouterOutlet.vue';
+// APENAS o RouterOutlet é importado estaticamente
+const RouterOutlet = { template: '<RouterView />' };
 
-// --- Páginas Públicas ---
-import LoginPage from "@/pages/common/LoginPage.vue";
-import RegisterProviderPage from "@/pages/providers/RegisterProviderPage.vue";
-
-// --- Fluxo de Onboarding ---
-import BarberOnboardingBarber from "@/components/onboarding/BarberOnboardingBarber.vue"; // Componente do Wizard
-
-// --- Páginas da Área Autenticada ---
-import DashboardProviderPage from "@/pages/providers/DashboardProviderPage.vue";
-import ServicesProviderPage from "@/pages/providers/ServicesProviderPage.vue";
-import ServiceFormPage from "@/pages/providers/ServiceFormPage.vue";
-import ManageTeamPage from "@/pages/providers/ManageTeamPage.vue";
-import AddTeamMemberPage from "@/pages/providers/AddTeamMemberPage.vue";
-import AppointmentsPage from "@/pages/providers/AppointmentsPage.vue";
-import AppointmentDetailsPage from "@/pages/providers/AppointmentDetailsPage.vue";
-import WorkingHoursPage from "@/pages/providers/WorkingHoursPage.vue";
-
-// Definição das rotas
 const routes: Array<RouteRecordRaw> = [
-    // --- Rotas Públicas ---
+    // ==========================================
+    // ROTA INICIAL - ESCOLHER TIPO DE CONTA
+    // ==========================================
     {
         path: '/',
+        name: 'AccountType',
+        component: () => import('@/pages/common/AccountTypePage.vue'),
+        meta: { title: 'Tipo de Conta' }
+    },
+
+    // ==========================================
+    // ROTAS PÚBLICAS
+    // ==========================================
+    {
+        path: '/login',
         name: 'Login',
-        component: LoginPage,
+        component: () => import('@/pages/common/LoginPage.vue'),
         meta: { title: 'Login' }
     },
     {
         path: '/provider/register',
         name: 'RegisterProvider',
-        component: RegisterProviderPage,
+        component: () => import('@/pages/providers/RegisterProviderPage.vue'),
         meta: { title: 'Cadastro de Barbeiro' }
     },
-    // --- Rota de Onboarding (pós-registro) ---
+
+    // ==========================================
+    // ONBOARDING DO BARBEIRO
+    // ==========================================
     {
         path: '/provider/onboarding',
         name: 'BarberOnboardingBarber',
-        component: BarberOnboardingBarber,
-        meta: { title: 'Configuração Inicial', requiresAuth: true, role: 'OWNER' } // Protegida
+        component: () => import('@/components/onboarding/BarberOnboardingBarber.vue'),
+        meta: {
+            title: 'Configuração Inicial',
+            requiresAuth: true,
+            role: 'OWNER'
+        }
     },
 
-    // --- Área Autenticada do Barbeiro ---
+    // ==========================================
+    // ÁREA DO BARBEIRO (PROVIDER)
+    // ==========================================
     {
-        path: '/provider/app', // Prefixo principal da área logada
-        component: RouterOutlet, // Usa um Layout Genérico VAZIO como pai
-        redirect: { name: 'Dashboard' }, // Redireciona /provider/app para a rota do dashboard
+        path: '/provider/app',
+        component: RouterOutlet,
+        redirect: { name: 'Dashboard' },
         meta: {
-            requiresAuth: true, // Indica que precisa estar logado
-            role: 'OWNER'       // Indica que precisa ter a role 'OWNER'
+            requiresAuth: true,
+            role: 'OWNER'
         },
         children: [
             {
-                path: 'dashboard', // URL: /provider/app/dashboard
-                name: 'Dashboard', // Nome da rota do Dashboard
-                component: DashboardProviderPage, // Usa o seu componente completo
+                path: 'dashboard',
+                name: 'Dashboard',
+                component: () => import('@/pages/providers/DashboardProviderPage.vue'),
                 meta: { title: 'Dashboard' }
             },
             {
-                path: 'services', // URL: /provider/app/services
+                path: 'services',
                 name: 'Services',
-                component: ServicesProviderPage,
+                component: () => import('@/pages/providers/ServicesProviderPage.vue'),
                 meta: { title: 'Meus Serviços' }
             },
             {
-                path: 'service/novo', // URL: /provider/app/service/novo
+                path: 'service/novo',
                 name: 'AddService',
-                component: ServiceFormPage,
+                component: () => import('@/pages/providers/ServiceFormPage.vue'),
                 meta: { title: 'Adicionar Serviço' }
             },
             {
-                path: 'service/editar/:id', // URL: /provider/app/service/editar/123
+                path: 'service/editar/:id',
                 name: 'EditService',
-                component: ServiceFormPage,
-                props: true, // Passa o :id como prop para ServiceFormPage
+                component: () => import('@/pages/providers/ServiceFormPage.vue'),
+                props: true,
                 meta: { title: 'Editar Serviço' }
             },
             {
-                path: 'equipe', // URL: /provider/app/equipe
+                path: 'equipe',
                 name: 'ManageTeam',
-                component: ManageTeamPage,
+                component: () => import('@/pages/providers/ManageTeamPage.vue'),
                 meta: { title: 'Gerenciar Equipe' }
             },
             {
-                path: 'equipe/novo', // URL: /provider/app/equipe/novo
+                path: 'equipe/novo',
                 name: 'AddTeamMember',
-                component: AddTeamMemberPage,
+                component: () => import('@/pages/providers/AddTeamMemberPage.vue'),
                 meta: { title: 'Adicionar Membro' }
             },
             {
-                path: 'equipe/editar/:memberId', // :memberId é o parâmetro
+                path: 'equipe/editar/:memberId',
                 name: 'EditTeamMember',
-                component: AddTeamMemberPage, // Reutiliza o mesmo formulário
-                props: true, // Passa o :memberId como prop
+                component: () => import('@/pages/providers/AddTeamMemberPage.vue'),
+                props: true,
                 meta: { title: 'Editar Membro' }
             },
             {
-                path: 'agendamentos', // URL: /provider/app/agendamentos
+                path: 'agendamentos',
                 name: 'Appointments',
-                component: AppointmentsPage,
+                component: () => import('@/pages/providers/AppointmentsPage.vue'),
                 meta: { title: 'Meus Agendamentos' }
             },
             {
-                path: 'agendamento/:id/detalhes', // URL: /provider/app/agendamento/456/detalhes
+                path: 'agendamento/:id/detalhes',
                 name: 'AppointmentDetails',
-                component: AppointmentDetailsPage,
-                props: true, // Passa o :id como prop para AppointmentDetailsPage
+                component: () => import('@/pages/providers/AppointmentDetailsPage.vue'),
+                props: true,
                 meta: { title: 'Detalhes do Agendamento' }
             },
             {
-                path: 'horarios', // URL: /provider/app/horarios
+                path: 'horarios',
                 name: 'WorkingHours',
-                component: WorkingHoursPage,
+                component: () => import('@/pages/providers/WorkingHoursPage.vue'),
                 meta: { title: 'Horários de Funcionamento' }
-            }
-            // Adicione outras rotas filhas aqui
+            },
+            {
+                path: 'profile',
+                name: 'ProviderProfile',
+                component: () => import('@/pages/providers/ProviderProfilePage.vue'),
+                meta: { title: 'Perfil' }
+            },
+            {
+                path: 'clients',
+                name: 'ClientsList',
+                component: () => import('@/pages/providers/ClientsListPage.vue'),
+                meta: { title: 'Meus Clientes' }
+            },
+            {
+                path: 'clients/:clientId',
+                name: 'ClientDetails',
+                component: () => import('@/pages/providers/ClientDetailsPage.vue'),
+                props: true,
+                meta: { title: 'Detalhes do Cliente' }
+            },
         ]
     },
 
-    // --- Rota Catch-all (404 Not Found) ---
-    // {
-    //   path: '/:catchAll(.*)', // Captura qualquer rota não definida
-    //   name: 'NotFound',
-    //   component: () => import('@/pages/NotFoundPage.vue') // Crie esta página
-    // }
+    // ==========================================
+    // ÁREA DO CLIENTE
+    // ==========================================
+    {
+        path: '/client',
+        component: RouterOutlet,
+        redirect: { name: 'ClientDashboard' },
+        meta: {
+            requiresAuth: true,
+            role: 'CLIENT'
+        },
+        children: [
+            {
+                path: 'dashboard',
+                name: 'ClientDashboard',
+                component: () => import('@/pages/clients/ClientDashboardPage.vue'),
+                meta: { title: 'Início' }
+            },
+            {
+                path: 'barbershop/:id',
+                name: 'BarbershopDetails',
+                component: () => import('@/pages/clients/BarbershopDetailsPage.vue'),
+                props: true,
+                meta: { title: 'Detalhes da Barbearia' }
+            },
+            {
+                path: 'barbershop/:id/booking',
+                name: 'BarbershopBooking',
+                component: () => import('@/pages/clients/BarbershopBookingPage.vue'),
+                props: true,
+                meta: { title: 'Agendar Horário' }
+            },
+            {
+                path: 'appointments',
+                name: 'ClientAppointments',
+                component: () => import('@/pages/clients/ClientAppointmentsPage.vue'),
+                meta: { title: 'Meus Agendamentos' }
+            },
+            {
+                path: 'favorites',
+                name: 'ClientFavorites',
+                component: () => import('@/pages/clients/ClientFavoritesPage.vue'),
+                meta: { title: 'Favoritos' }
+            },
+            {
+                path: 'profile',
+                name: 'ClientProfile',
+                component: () => import('@/pages/clients/ClientProfilePage.vue'),
+                meta: { title: 'Perfil' }
+            }
+        ]
+    },
+
+    // ==========================================
+    // ROTA 404
+    // ==========================================
+    {
+        path: '/:pathMatch(.*)*',
+        redirect: '/'
+    }
 ];
 
-// Criação da instância do roteador
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes,
-    // Opcional: Rola a página para o topo ao navegar
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition;
@@ -144,47 +218,70 @@ const router = createRouter({
     },
 });
 
-// --- GUARDA DE ROTA GLOBAL ---
+// GUARDA DE NAVEGAÇÃO GLOBAL
 router.beforeEach((to, from, next) => {
-    // Verifica se a rota de destino (ou alguma rota pai) requer autenticação
+    const authStore = useAuthStore();
+
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
-    // Encontra a role exigida pela rota mais específica (se houver)
     const requiredRole = to.matched.slice().reverse().find(record => record.meta.role)?.meta.role as string | undefined;
 
-    const token = localStorage.getItem('authToken');
-    const userDataString = localStorage.getItem('userData');
-    let userRole: string | null = null;
+    const isAuthenticated = authStore.isAuthenticated;
+    const userRole = authStore.user?.role;
 
-    if (userDataString) {
-        try {
-            userRole = JSON.parse(userDataString).role;
-        } catch (e) {
-            console.error("Erro ao parsear dados do usuário:", e);
-            // Limpa dados inválidos para forçar novo login
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
-            localStorage.removeItem('barbershopId');
+    console.log('🔐 Router Guard:', {
+        to: to.name,
+        isAuthenticated,
+        userRole,
+        requiresAuth
+    });
+
+    // ==========================================
+    // 1. REDIRECIONA USUÁRIOS JÁ AUTENTICADOS
+    // ==========================================
+    if (isAuthenticated && ['AccountType', 'Login', 'RegisterProvider'].includes(to.name as string)) {
+        console.log('✅ Usuário autenticado acessando rota pública, redirecionando...');
+
+        if (userRole === 'OWNER') {
+            next({ name: 'Dashboard' });
+            return;
+        } else if (userRole === 'CLIENT') {
+            next({ name: 'ClientDashboard' });
+            return;
         }
     }
 
-    // Lógica de Redirecionamento
-    if (requiresAuth) { // Se a rota é protegida
-        if (!token) { // E não há token
-            next({ name: 'Login', query: { redirect: to.fullPath } }); // Redireciona para Login, guardando a rota original
-        } else { // Se há token
-            if (requiredRole) { // E a rota exige uma role específica
-                if (userRole === requiredRole) { // E o usuário tem a role correta
-                    next(); // Permite o acesso
-                } else { // Usuário tem token, mas role errada
-                    console.warn(`Acesso negado: Rota requer role '${requiredRole}', usuário tem role '${userRole}'`);
-                    next({ name: 'Login' }); // Redireciona para Login (ou uma página 'Não Autorizado')
+    // ==========================================
+    // 2. VERIFICA ROTAS PROTEGIDAS
+    // ==========================================
+    if (requiresAuth) {
+        if (!isAuthenticated) {
+            console.log('❌ Não autenticado, redirecionando para Login');
+            next({ name: 'Login', query: { redirect: to.fullPath } });
+        } else {
+            if (requiredRole) {
+                if (userRole === requiredRole) {
+                    console.log('✅ Role correta, permitindo acesso');
+                    next();
+                } else {
+                    console.warn(`⚠️ Acesso negado: Rota requer '${requiredRole}', usuário tem '${userRole}'`);
+
+                    // Redireciona para área correta
+                    if (userRole === 'OWNER') {
+                        next({ name: 'Dashboard' });
+                    } else if (userRole === 'CLIENT') {
+                        next({ name: 'ClientDashboard' });
+                    } else {
+                        next({ name: 'AccountType' });
+                    }
                 }
-            } else { // Rota protegida, mas não exige role específica
-                next(); // Permite o acesso (só precisa de token)
+            } else {
+                console.log('✅ Rota protegida sem role específica, permitindo acesso');
+                next();
             }
         }
-    } else { // Se a rota é pública
-        next(); // Permite o acesso
+    } else {
+        console.log('✅ Rota pública, permitindo acesso');
+        next();
     }
 });
 

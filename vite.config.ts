@@ -1,21 +1,13 @@
-// vite.config.ts
-
-import { fileURLToPath, URL } from 'node:url'
+// vite.config.ts (CORRIGIDO)
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+import devtools from 'vite-plugin-vue-devtools'
 
-// https://vite.dev/config/
-export default defineConfig({
+// Use a função de configuração para aceder ao 'command'
+export default defineConfig(({ command }) => ({
     plugins: [
         vue(),
-        vueDevTools(),
+        // Adiciona o devtools apenas se o comando NÃO for 'build'
+        command !== 'build' && devtools(),
     ],
-    resolve: {
-        alias: {
-            '@': fileURLToPath(new URL('./src', import.meta.url)),
-            // ADICIONAR ESTA LINHA para suportar runtime compilation
-            'vue': 'vue/dist/vue.esm-bundler.js'
-        },
-    },
-})
+}))

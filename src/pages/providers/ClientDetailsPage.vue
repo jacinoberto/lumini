@@ -16,6 +16,9 @@ const client = ref<Client | null>(null);
 const appointmentHistory = ref<ClientAppointmentHistory[]>([]);
 const notes = ref('');
 
+// -------------------------------
+// Carregar dados do cliente e histórico
+// -------------------------------
 async function loadClientDetails() {
   const barbershopId = authStore.barbershopId;
   if (!barbershopId) return;
@@ -23,14 +26,31 @@ async function loadClientDetails() {
   try {
     loading.value = true;
 
-    // Carrega dados do cliente
     const clientResponse = await clientService.getById(barbershopId, clientId.value);
-    client.value = clientResponse.data || clientResponse;
-    notes.value = client.value?.notes || '';
+    const clientData = clientResponse.data;
 
-    // Carrega histórico de agendamentos
-    const historyResponse = await clientService.getAppointmentHistory(barbershopId, clientId.value);
-    appointmentHistory.value = historyResponse.data || historyResponse;
+    // Popula dados do cliente e estatísticas
+    client.value = {
+      ...clientData.client,
+      total_appointments: clientData.stats.total_appointments,
+      completed_appointments: clientData.stats.completed_appointments,
+      cancelled_appointments: clientData.stats.cancelled_appointments,
+      last_appointment: clientData.stats.last_appointment
+    };
+
+    notes.value = client.value.notes || '';
+
+    // Popula histórico de agendamentos
+    appointmentHistory.value = clientData.recent_appointments.map(a => ({
+      ...a,
+      service_price: parseFloat(a.price)
+    }));
+
+    // Calcula total gasto com agendamentos concluídos (status_id = 3)
+    client.value.total_spent = appointmentHistory.value
+        .filter(a => a.status_id === 3)
+        .reduce((sum, a) => sum + a.service_price, 0);
+
   } catch (error: any) {
     console.error('Erro ao carregar cliente:', error);
     alert('Erro ao carregar dados do cliente');
@@ -40,8 +60,12 @@ async function loadClientDetails() {
   }
 }
 
-function getInitials(name: string): string {
-  const names = name.split(' ');
+// -------------------------------
+// Funções utilitárias
+// -------------------------------
+function getInitials(name?: string): string {
+  if (!name) return '';
+  const names = name.trim().split(' ');
   if (names.length >= 2) {
     return `${names[0][0]}${names[1][0]}`.toUpperCase();
   }
@@ -69,15 +93,16 @@ function formatMonthYear(date: string): string {
   });
 }
 
+// -------------------------------
+// Salvar anotações
+// -------------------------------
 async function saveNotes() {
   const barbershopId = authStore.barbershopId;
   if (!barbershopId) return;
 
   try {
     saving.value = true;
-    await clientService.updateNotes(barbershopId, clientId.value, {
-      notes: notes.value
-    });
+    await clientService.updateNotes(barbershopId, clientId.value, { notes: notes.value });
     alert('Anotações salvas com sucesso!');
   } catch (error: any) {
     console.error('Erro ao salvar anotações:', error);
@@ -87,14 +112,22 @@ async function saveNotes() {
   }
 }
 
+// -------------------------------
+// Navegação
+// -------------------------------
 function goBack() {
   router.push({ name: 'ClientsList' });
 }
 
+// -------------------------------
+// Lifecycle
+// -------------------------------
 onMounted(() => {
   loadClientDetails();
 });
 </script>
+
+
 
 <template>
   <div class="client-detail-screen">

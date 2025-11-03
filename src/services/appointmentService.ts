@@ -78,7 +78,9 @@ export const appointmentService = {
     /**
      * Cria um novo agendamento
      */
-    async create(barbershopId: string, data: CreateAppointmentData) {
+    async create(barbershopId: string, data: any) {
+        console.log(barbershopId);
+        console.log(data);
         const response = await api.post(`/barbershops/${barbershopId}/appointments`, data);
         return response.data;
     },

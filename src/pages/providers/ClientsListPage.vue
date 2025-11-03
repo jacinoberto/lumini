@@ -12,16 +12,18 @@ const loading = ref(true);
 const clients = ref<Client[]>([]);
 const searchQuery = ref('');
 
+// Filtra clientes pelo nome ou telefone
 const filteredClients = computed(() => {
   if (!searchQuery.value) return clients.value;
 
   const query = searchQuery.value.toLowerCase();
   return clients.value.filter(client =>
       client.name.toLowerCase().includes(query) ||
-      client.email.toLowerCase().includes(query)
+      (client.phone && client.phone.toLowerCase().includes(query))
   );
 });
 
+// Carrega clientes da barbearia
 async function loadClients() {
   const barbershopId = authStore.barbershopId;
   if (!barbershopId) return;
@@ -37,31 +39,38 @@ async function loadClients() {
   }
 }
 
-function getInitials(name: string): string {
-  const names = name.split(' ');
+// Gera iniciais do cliente
+function getInitials(name?: string): string {
+  if (!name) return '';
+  const names = name.trim().split(' ');
   if (names.length >= 2) {
     return `${names[0][0]}${names[1][0]}`.toUpperCase();
   }
   return name.substring(0, 2).toUpperCase();
 }
 
+// Formata data para "Nov/2025"
 function formatDate(date: string): string {
   const d = new Date(date);
   return d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
 }
 
+// Navega para detalhes do cliente
 function viewClientDetails(clientId: string) {
   router.push({ name: 'ClientDetails', params: { clientId } });
 }
 
+// Volta para dashboard
 function goBack() {
   router.push({ name: 'Dashboard' });
 }
 
+// Monta o componente
 onMounted(() => {
   loadClients();
 });
 </script>
+
 
 <template>
   <div class="clients-screen">

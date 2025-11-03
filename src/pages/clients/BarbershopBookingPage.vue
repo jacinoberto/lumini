@@ -136,6 +136,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { barbershopService } from '@/services/barbershopService';
 import { appointmentService } from '@/services/appointmentService';
+import type { CreateAppointmentData } from "@/services/appointmentService";
 
 const route = useRoute();
 const router = useRouter();
@@ -226,23 +227,49 @@ async function confirmBooking() {
   try {
     submitting.value = true;
 
-    await appointmentService.create({
-      barbershop_id: barbershop.value.id,
-      service_id: selectedService.value,
+    if (!barbershop.value) throw new Error('Barbearia não carregada');
+
+    const service = barbershop.value.services.find((s: any) => s.id === selectedService.value);
+    if (!service) throw new Error('Serviço inválido');
+
+    if (!selectedTime.value) throw new Error('Horário não selecionado');
+
+    const [hour, minute] = selectedTime.value.split(':').map(Number);
+    const startDate = new Date(selectedDate.value);
+    startDate.setHours(hour, minute, 0, 0);
+
+    const endDate = new Date(startDate.getTime() + service.duration_minutes * 60000);
+
+    const userDataString = localStorage.getItem('userData');
+    if (!userDataString) throw new Error('Usuário não logado');
+
+    const userData = JSON.parse(userDataString);
+    const clientId = userData.id;
+    if (!clientId) throw new Error('ID do usuário não encontrado');
+
+    const payload: CreateAppointmentData = {
+      client_id: clientId,
       barber_id: selectedBarber.value,
-      date: selectedDate.value,
-      time: selectedTime.value,
-      notes: notes.value || undefined
-    });
+      service_id: selectedService.value,
+      start_time: startDate.toISOString(),
+      end_time: endDate.toISOString(),
+    };
+
+    console.log('Payload a ser enviado:', payload); // ✅ debug: veja se está correto
+
+    // ⚠️ Passar ID da barbearia e payload
+    await appointmentService.create(barbershop.value.id, payload);
 
     alert('Agendamento realizado com sucesso!');
     router.push({ name: 'ClientAppointments' });
   } catch (err: any) {
-    alert(err.response?.data?.message || 'Erro ao criar agendamento');
+    console.error(err);
+    alert(err.response?.data?.message || err.message || 'Erro ao criar agendamento');
   } finally {
     submitting.value = false;
   }
 }
+
 
 function goBack() {
   router.back();

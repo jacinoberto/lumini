@@ -66,7 +66,7 @@ export default defineComponent({
 
         // Salva no authStore
         const barbershopId = user.barbershop?.id || null;
-        this.authStore.setAuth(access_token, user, barbershopId);
+        this.authStore.setAuth(access_token, user);
 
         // Redireciona baseado na role
         if (user.role === 'OWNER') {

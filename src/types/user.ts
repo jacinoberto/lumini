@@ -10,12 +10,19 @@ export type Address = {
     number: number | null
 }
 
+export type UserRole = 'CLIENT' | 'OWNER' | null;
+
 export type User = {
     name: string,
     socialSecurity: string,
     email: string,
     phone: string,
-    password: string
+    password: string,
+    role: UserRole,
+    barbershop: {
+        id: string | number;
+        name: string;
+    } | null;
 }
 
 export type RegisterProvider = {

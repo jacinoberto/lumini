@@ -17,10 +17,13 @@ app.directive('mask', mask);
 app.use(pinia);
 app.use(router);
 
-const token = localStorage.getItem('authToken');
-if (token) {
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    console.log("Token carregado do localStorage para o Axios.");
+if (typeof localStorage !== 'undefined') {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log("Token carregado do localStorage para o Axios.");
+    }
 }
 
 app.mount('#app');
+

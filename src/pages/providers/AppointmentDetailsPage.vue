@@ -32,11 +32,33 @@ async function loadAppointment() {
 }
 
 function getClientInitials(name: string): string {
-  const names = name.split(' ');
-  if (names.length >= 2) {
-    return `${names[0][0]}${names[1][0]}`.toUpperCase();
+  // 1. Garante que temos um nome e removemos espaços extras
+  if (!name || typeof name !== 'string' || name.trim() === '') {
+    return '';
   }
-  return name.substring(0, 2).toUpperCase();
+
+  // 2. Limpa o nome e filtra palavras vazias
+  const words = name.trim().split(/\s+/).filter(Boolean);
+
+  // 3. Pega a primeira palavra (se existir)
+  const firstWord = words[0];
+  // 4. Pega a última palavra (se houver mais de uma)
+  const lastWord = words.length > 1 ? words[words.length - 1] : undefined;
+
+  // 5. Agora, com variáveis seguras, montamos as iniciais
+
+  if (firstWord && lastWord) {
+    // Caso com 2 ou mais nomes (ex: "Jonas Silva" -> "JS")
+    return `${firstWord[0]}${lastWord[0]}`.toUpperCase();
+  }
+
+  if (firstWord) {
+    // Caso com 1 nome (ex: "Jonas" -> "JO")
+    return firstWord.substring(0, 2).toUpperCase();
+  }
+
+  // Caso não haja nenhuma palavra válida (ex: name era " ")
+  return '';
 }
 
 function formatDateTime(datetime: string): string {

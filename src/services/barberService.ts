@@ -10,12 +10,14 @@ export interface Barber {
     order: number;
     created_at: string;
     updated_at: string;
+    rating_average: number | null;
+    rating_count: number | null;
 }
 
 export interface CreateBarberData {
     name: string;
     specialties?: string;
-    profile_image_url?: string;
+    profile_image_url?: string | undefined;
     is_active?: boolean;
 }
 

@@ -9,6 +9,10 @@ interface User {
     email: string;
     role: UserRole;
     phone?: string;
+    barbershop: {
+        id: string | number;
+        name: string;
+    } | null;
 }
 
 export const useAuthStore = defineStore('auth', () => {

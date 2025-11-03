@@ -1,6 +1,6 @@
 <template>
   <div class="client-home-screen">
-    <TheHeader role="client" :user-data="userData" />
+    <TheHeader role="client" :user-data="userData || {}" />
 
     <main class="home-content">
       <section class="categories-section">

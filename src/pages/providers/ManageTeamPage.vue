@@ -45,7 +45,7 @@ function editBarber(barber: Barber) {
   router.push({
     name: 'EditTeamMember',
     params: { memberId: barber.id },
-    state: { barber }
+    // state: { barber } // <-- REMOVA ESTA LINHA
   });
 }
 

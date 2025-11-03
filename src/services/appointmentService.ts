@@ -11,6 +11,7 @@ export interface Appointment {
     end_time: string; // ISO 8601 timestamp
     created_at?: string;
     updated_at?: string;
+    price?: number;
 
     // Relacionamentos (se a API retornar)
     client?: {

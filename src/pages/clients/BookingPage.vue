@@ -187,8 +187,11 @@ async function loadBarbershop() {
       selectedBarber.value = barbershop.value.barbers[0].id;
     }
 
-    // Set today as default date
-    selectedDate.value = minDate.value;
+    if (typeof minDate.value === 'string') {
+      selectedDate.value = minDate.value;
+    } else {
+      selectedDate.value = '';
+    }
 
     // Load slots
     if (selectedBarber.value && selectedDate.value) {
@@ -232,7 +235,7 @@ async function confirmBooking() {
   try {
     submitting.value = true;
 
-    await appointmentService.create({
+    await appointmentService.create(barbershop.value.id,{
       barbershop_id: barbershop.value.id,
       service_id: selectedService.value,
       barber_id: selectedBarber.value,

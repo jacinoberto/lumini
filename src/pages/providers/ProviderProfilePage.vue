@@ -18,12 +18,28 @@ const passwordData = ref({
 });
 
 function getInitials(name: string): string {
-  if (!name) return 'B';
-  const names = name.split(' ');
-  if (names.length >= 2) {
-    return `${names[0][0]}${names[1][0]}`.toUpperCase();
+  // 1. Guarda de segurança
+  if (!name || typeof name !== 'string') {
+    return '';
   }
-  return name.substring(0, 2).toUpperCase();
+
+  // 2. Limpa e filtra
+  const names = name.trim().split(/\s+/).filter(Boolean);
+
+  // 3. Se tivermos 2 ou mais nomes
+  if (names.length >= 2) {
+    // Adicionamos '!' para garantir ao TS que names[0] e names[1] existem
+    return `${names[0]![0]}${names[1]![0]}`.toUpperCase();
+  }
+
+  // 4. Se tiver apenas 1 nome
+  if (names.length === 1) {
+    // Adicionamos '!' para garantir ao TS que names[0] existe
+    return names[0]!.substring(0, 2).toUpperCase();
+  }
+
+  // 5. Se não houver nome
+  return '';
 }
 
 function editBarbershop() {

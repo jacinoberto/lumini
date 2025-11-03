@@ -109,7 +109,7 @@ const formData = ref({
 });
 
 const isLoading = ref(false);
-const apiErrorMessage = ref('');
+let apiErrorMessage = ref(''); // A variável ref
 
 // Validations
 const rules = computed(() => ({
@@ -120,7 +120,7 @@ const rules = computed(() => ({
     },
     phone: {
       required: helpers.withMessage('O telefone é obrigatório.', required),
-      minLength: helpers.withMessage('Insira um telefone válido.', minLength(15))
+      minLength: helpers.withMessage('Insira um telefone válido.', minLength(15)) // Assumindo máscara (##) #####-####
     },
     email: {
       required: helpers.withMessage('O e-mail é obrigatório.', required),
@@ -141,13 +141,12 @@ const v$ = useVuelidate(rules, { formData });
 
 // Methods
 const handleRegister = async () => {
-  apiErrorMessage.value = '';
+  apiErrorMessage.value = ''; // Acesso correto com .value
   const isFormValid = await v$.value.$validate();
   if (!isFormValid) return;
 
   isLoading.value = true;
   try {
-    // Payload conforme especificação do backend
     const payload = {
       name: formData.value.name,
       email: formData.value.email,
@@ -157,39 +156,40 @@ const handleRegister = async () => {
     };
 
     console.log('Enviando registro de cliente:', payload);
-
     const response = await api.post('/register', payload);
-
     console.log('Resposta do registro:', response.data);
 
-    // Resposta esperada: { message, access_token, token_type, user }
     const { access_token, user } = response.data;
 
-    // Salva na store (sem barbershopId para cliente)
     authStore.setAuth(access_token, user);
     authStore.clearSelectedRole();
 
     console.log('Cliente registrado com sucesso:', user);
-
-    // Redireciona para dashboard do cliente
     router.push({ name: 'ClientDashboard' });
 
   } catch (error: any) {
-    console.error('Erro no cadastro do cliente:', error);
-
+    // --- CORREÇÃO ESTÁ NESTE BLOCO ---
     if (error.response?.data?.errors) {
-      // Erros de validação do Laravel
-      const errors = error.response.data.errors;
-      const firstErrorKey = Object.keys(errors)[0];
-      const firstError = errors[firstErrorKey];
-      apiErrorMessage.value = Array.isArray(firstError) ? firstError[0] : 'Erro ao criar conta.';
+      const apiErrors = error.response.data.errors;
+      const firstErrorKey = Object.keys(apiErrors)[0];
+
+      if (firstErrorKey) {
+        const errorMessages = apiErrors[firstErrorKey];
+
+        if (Array.isArray(errorMessages) && errorMessages.length > 0) {
+          apiErrorMessage.value = errorMessages[0]; // Correto: usa .value
+        } else {
+          apiErrorMessage.value = 'Ocorreu um erro de validação.'; // Correto: usa .value
+        }
+      } else {
+        apiErrorMessage.value = error.response.data.message || 'Erro ao criar conta.'; // Correto: usa .value
+      }
     } else if (error.response?.data?.message) {
-      apiErrorMessage.value = error.response.data.message;
-    } else if (error.message) {
-      apiErrorMessage.value = error.message;
+      apiErrorMessage.value = error.response.data.message; // Correto: usa .value
     } else {
-      apiErrorMessage.value = 'Não foi possível conectar ao servidor.';
+      apiErrorMessage.value = 'Erro ao criar conta.'; // Correto: usa .value
     }
+    // --- FIM DA CORREÇÃO ---
   } finally {
     isLoading.value = false;
   }
@@ -197,7 +197,6 @@ const handleRegister = async () => {
 
 // Lifecycle
 onMounted(() => {
-  // Valida se selecionou CLIENT
   if (authStore.selectedRole !== 'CLIENT') {
     console.warn('Role não é CLIENT, redirecionando para seleção');
     router.push({ name: 'AccountType' });

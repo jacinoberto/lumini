@@ -28,7 +28,7 @@ function generateDates() {
 }
 
 function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split('T')[0] ?? '';
 }
 
 function getDayName(date: Date): string {
@@ -42,7 +42,7 @@ function getDayName(date: Date): string {
   }
 
   const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  return days[date.getDay()];
+  return date.toISOString().split('T')[0] ?? '';
 }
 
 function getDayNumber(date: Date): string {

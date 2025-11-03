@@ -182,8 +182,11 @@ async function loadBarbershop() {
       selectedBarber.value = barbershop.value.barbers[0].id;
     }
 
-    // Set today as default date
-    selectedDate.value = minDate.value;
+    if (typeof minDate.value === 'string') {
+      selectedDate.value = minDate.value;
+    } else {
+      selectedDate.value = '';
+    }
 
     // Load slots
     if (selectedBarber.value && selectedDate.value) {
@@ -235,9 +238,18 @@ async function confirmBooking() {
     if (!selectedTime.value) throw new Error('Horário não selecionado');
 
     // Construir startDate no fuso local
+
     const [year, month, day] = selectedDate.value.split('-').map(Number);
     const [hour, minute] = selectedTime.value.split(':').map(Number);
-    let startDate = new Date(year, month - 1, day, hour, minute, 0, 0);
+    let startDate = new Date(
+        year ?? 0,
+        (month ?? 1) - 1,
+        day ?? 1,
+        hour ?? 0,
+        minute ?? 0,
+        0,
+        0
+    );
 
     // Ajustar para UTC-3
     startDate = new Date(startDate.getTime() - 3 * 60 * 60 * 1000);

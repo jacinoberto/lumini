@@ -45,7 +45,7 @@ function editService(service: Service) {
   router.push({
     name: 'EditService',
     params: { id: service.id },
-    state: { service }
+    //state: { service }
   });
 }
 

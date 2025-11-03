@@ -62,7 +62,7 @@
       <!-- Error State -->
       <div v-else-if="error" class="empty-state">
         <p>{{ error }}</p>
-        <button class="retry-btn" @click="loadBarbershops">Tentar Novamente</button>
+        <button class="retry-btn" @click="() => loadBarbershops()">Tentar Novamente</button>
       </div>
 
       <!-- Empty State -->

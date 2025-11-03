@@ -26,6 +26,10 @@ function getInitials(name: string): string {
   return name.substring(0, 2).toUpperCase();
 }
 
+function editBarbershop() {
+  router.push({ name: 'EditBarbershop' });
+}
+
 function goToBarbershopData() {
   // TODO: Criar página de dados da barbearia
   alert('Página de dados da barbearia será implementada');
@@ -98,7 +102,7 @@ onMounted(() => {
     <main class="profile-menu">
       <!-- Configurações -->
       <div class="menu-group">
-        <button class="menu-item" @click="goToBarbershopData">
+        <button class="menu-item" @click="editBarbershop">
           <span class="menu-icon">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>

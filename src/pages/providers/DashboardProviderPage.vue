@@ -2,52 +2,48 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
+import { dashboardService, type DashboardStats, type TodayAppointment } from '@/services/dashboardService';
 import BottomNavigation from '@/components/ui/BottomNavigation.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-const stats = ref({
-  todayAppointments: 0,
-  totalRevenue: 0,
-  averageRating: 0
+const stats = ref<DashboardStats>({
+  today_appointments: 0,
+  monthly_revenue: 0,
+  average_rating: 0,
+  rating_count: 0 // ADICIONAR
 });
 
-const todayAppointments = ref<any[]>([]);
+const todayAppointments = ref<TodayAppointment[]>([]);
 const loading = ref(true);
 
 async function loadDashboardData() {
+  const barbershopId = authStore.barbershopId;
+  if (!barbershopId) {
+    loading.value = false;
+    return;
+  }
+
   try {
     loading.value = true;
 
-    // TODO: Implementar chamadas reais à API
-    // Por enquanto, dados de exemplo
+    // Carrega estatísticas
+    const statsResponse = await dashboardService.getStats(barbershopId);
+    const statsData = statsResponse.data || statsResponse;
+
+    console.log('Stats recebidas:', statsData);
+
     stats.value = {
-      todayAppointments: 12,
-      totalRevenue: 8400,
-      averageRating: 4.9
+      today_appointments: Number(statsData.today_appointments) || 0,
+      monthly_revenue: Number(statsData.monthly_revenue) || 0,
+      average_rating: Number(statsData.average_rating) || 0,
+      rating_count: Number(statsData.rating_count) || 0 // ADICIONAR
     };
 
-    todayAppointments.value = [
-      {
-        id: '1',
-        time: '14:00',
-        clientName: 'Jonas Nascimento',
-        serviceName: 'Corte + Barba'
-      },
-      {
-        id: '2',
-        time: '15:30',
-        clientName: 'Carlos Andrade',
-        serviceName: 'Mullet'
-      },
-      {
-        id: '3',
-        time: '17:00',
-        clientName: 'Maria Clara',
-        serviceName: 'Corte Feminino'
-      }
-    ];
+    // Carrega agendamentos de hoje
+    const appointmentsResponse = await dashboardService.getTodayAppointments(barbershopId);
+    todayAppointments.value = appointmentsResponse.data || appointmentsResponse;
   } catch (error) {
     console.error('Erro ao carregar dashboard:', error);
   } finally {
@@ -63,8 +59,19 @@ function getInitials(name: string): string {
   return name.substring(0, 2).toUpperCase();
 }
 
-function formatCurrency(value: number): string {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function formatCurrency(value: number | undefined | null): string {
+  const numValue = Number(value) || 0;
+  return numValue.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatRating(value: number | undefined | null): string {
+  const numValue = Number(value) || 0;
+  return numValue.toFixed(1);
 }
 
 function navigateTo(routeName: string) {
@@ -86,7 +93,7 @@ onMounted(() => {
     <header class="dashboard-header">
       <div class="header-content">
         <div class="user-avatar">
-          <span>{{ getInitials(authStore.user?.barbershop?.name || authStore.user?.name || 'Studio Lumini') }}</span>
+          <span>{{ getInitials(authStore.user?.barbershop?.name || authStore.user?.name || 'SL') }}</span>
         </div>
         <div class="header-text">
           <p class="greeting">Bem-vindo</p>
@@ -106,20 +113,25 @@ onMounted(() => {
       <section class="stats-section">
         <div class="stat-card">
           <p class="stat-label">Hoje</p>
-          <p class="stat-value">{{ stats.todayAppointments }}</p>
+          <p class="stat-value">{{ loading ? '...' : stats.today_appointments }}</p>
           <p class="stat-description">agendamentos</p>
         </div>
 
         <div class="stat-card">
           <p class="stat-label">Receita</p>
-          <p class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</p>
+          <p class="stat-value">{{ loading ? '...' : formatCurrency(stats.monthly_revenue) }}</p>
           <p class="stat-description">este mês</p>
         </div>
 
         <div class="stat-card">
           <p class="stat-label">Avaliação</p>
-          <p class="stat-value">{{ stats.averageRating }}</p>
-          <p class="stat-description">média</p>
+          <div class="rating-display">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" class="star-icon">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <p class="stat-value">{{ loading ? '...' : formatRating(stats.average_rating) }}</p>
+          </div>
+          <p class="stat-description">{{ stats.rating_count }} avaliações</p>
         </div>
       </section>
 
@@ -187,6 +199,12 @@ onMounted(() => {
 
         <!-- Empty State -->
         <div v-else-if="todayAppointments.length === 0" class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
           <p>Nenhum agendamento para hoje</p>
         </div>
 
@@ -199,11 +217,11 @@ onMounted(() => {
           >
             <div class="appointment-time">{{ appointment.time }}</div>
             <div class="appointment-avatar">
-              {{ getInitials(appointment.clientName) }}
+              {{ getInitials(appointment.client_name) }}
             </div>
             <div class="appointment-info">
-              <p class="client-name">{{ appointment.clientName }}</p>
-              <p class="service-name">{{ appointment.serviceName }}</p>
+              <p class="client-name">{{ appointment.client_name }}</p>
+              <p class="service-name">{{ appointment.service_name }}</p>
             </div>
           </div>
         </div>
@@ -229,7 +247,7 @@ onMounted(() => {
   align-items: center;
   padding: 2rem 1.5rem;
   background: linear-gradient(135deg, var(--color-accent-primary), #047857);
-  border-radius: 0 0 1.5rem 1.5rem; /* ADICIONAR ESTA LINHA */
+  border-radius: 0 0 1.5rem 1.5rem;
 }
 
 .header-content {
@@ -279,49 +297,6 @@ onMounted(() => {
 
 .notification-btn:hover {
   background-color: rgba(255, 255, 255, 0.3);
-}
-
-.header-user {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.user-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-accent-primary), #047857);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-primary);
-}
-
-.user-info .greeting {
-  font-size: 0.875rem;
-  color: var(--color-text-secondary);
-}
-
-.user-info .user-name {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin-top: 0.25rem;
-}
-
-.notification-btn {
-  background: none;
-  border: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: background-color 0.3s;
-}
-
-.notification-btn:hover {
-  background-color: var(--color-border);
 }
 
 .dashboard-content {
@@ -458,6 +433,14 @@ onMounted(() => {
   border: 1px solid var(--color-border);
 }
 
+.empty-state svg {
+  margin: 0 auto 1rem;
+}
+
+.empty-state p {
+  font-size: 1rem;
+}
+
 .appointments-list {
   display: flex;
   flex-direction: column;
@@ -508,5 +491,17 @@ onMounted(() => {
   font-size: 0.875rem;
   color: var(--color-text-secondary);
   margin-top: 0.25rem;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+.star-icon {
+  color: #FFA500;
 }
 </style>

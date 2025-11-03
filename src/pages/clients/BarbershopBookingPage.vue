@@ -234,11 +234,16 @@ async function confirmBooking() {
 
     if (!selectedTime.value) throw new Error('Horário não selecionado');
 
+    // Construir startDate no fuso local
+    const [year, month, day] = selectedDate.value.split('-').map(Number);
     const [hour, minute] = selectedTime.value.split(':').map(Number);
-    const startDate = new Date(selectedDate.value);
-    startDate.setHours(hour, minute, 0, 0);
+    let startDate = new Date(year, month - 1, day, hour, minute, 0, 0);
 
-    const endDate = new Date(startDate.getTime() + service.duration_minutes * 60000);
+    // Ajustar para UTC-3
+    startDate = new Date(startDate.getTime() - 3 * 60 * 60 * 1000);
+
+    // Calcular endDate com o mesmo ajuste
+    let endDate = new Date(startDate.getTime() + service.duration_minutes * 60000);
 
     const userDataString = localStorage.getItem('userData');
     if (!userDataString) throw new Error('Usuário não logado');
@@ -255,9 +260,8 @@ async function confirmBooking() {
       end_time: endDate.toISOString(),
     };
 
-    console.log('Payload a ser enviado:', payload); // ✅ debug: veja se está correto
+    console.log('Payload a ser enviado:', payload);
 
-    // ⚠️ Passar ID da barbearia e payload
     await appointmentService.create(barbershop.value.id, payload);
 
     alert('Agendamento realizado com sucesso!');
@@ -269,7 +273,6 @@ async function confirmBooking() {
     submitting.value = false;
   }
 }
-
 
 function goBack() {
   router.back();

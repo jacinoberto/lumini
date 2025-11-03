@@ -51,7 +51,7 @@
 
       <!-- Logout Button -->
       <div class="menu-group">
-        <button class="logout-btn" @click="confirmLogout">
+        <button class="logout-btn" @click="logout">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
             <polyline points="16 17 21 12 16 7"></polyline>
@@ -149,6 +149,18 @@ async function loadProfile() {
   }
 }
 
+async function logout() {
+  const confirmed = confirm('Deseja realmente sair?');
+  if (!confirmed) return;
+
+  try {
+    authStore.clearAuth();
+    router.push({ name: 'AccountType' });
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+  }
+}
+
 function editProfile() {
   alert('Funcionalidade de editar perfil em desenvolvimento');
   // Implementar modal ou navegar para página de edição
@@ -159,13 +171,7 @@ function changePassword() {
   // Implementar modal ou navegar para página de alteração de senha
 }
 
-function confirmLogout() {
-  const confirmed = confirm('Tem certeza que deseja sair?');
-  if (confirmed) {
-    authStore.logout();
-    router.push({ name: 'Login' });
-  }
-}
+
 
 onMounted(() => {
   loadProfile();

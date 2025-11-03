@@ -141,6 +141,12 @@ const routes: Array<RouteRecordRaw> = [
                 props: true,
                 meta: { title: 'Detalhes do Cliente' }
             },
+            {
+                path: 'edit-barbershop',
+                name: 'EditBarbershop',
+                component: () => import('@/pages/providers/EditBarbershopPage.vue'),
+                meta: { title: 'Editar Barbearia' }
+            },
         ]
     },
 

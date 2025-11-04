@@ -42,6 +42,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import api from '@/services/api';
+import router from '@/router';
 
 // Validação
 import { useVuelidate } from '@vuelidate/core';
@@ -101,7 +102,6 @@ export default defineComponent({
 
       this.isLoading = true;
       try {
-        // CORREÇÃO: O payload agora "puxa" os dados da estrutura 'provider'
         const payload = {
           name: this.provider.owner.name,
           email: this.provider.owner.email,
@@ -113,7 +113,6 @@ export default defineComponent({
 
         const response = await api.post('/register', payload);
 
-        // Sucesso!
         const { access_token, user } = response.data;
         const barbershopId = user.barbershop.id;
 
@@ -121,7 +120,7 @@ export default defineComponent({
         localStorage.setItem('barbershopId', barbershopId);
         api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
-        this.$router.push({ name: 'BarberOnboardingBarber' });
+        router.push({ name: 'BarberOnboardingBarber' });
 
       } catch (error: any) {
         const apiErrors = error.response?.data?.errors || {}; // Supondo que apiErrors venha daqui

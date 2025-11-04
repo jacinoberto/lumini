@@ -4,7 +4,7 @@ import router from '@/router';
 
 // Configuração base da API
 const api: AxiosInstance = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
+    baseURL: import.meta.env.VITE_API_URL || 'https://api-lumini.onrender.com/api',
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json',

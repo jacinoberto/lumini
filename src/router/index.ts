@@ -32,6 +32,12 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/pages/providers/RegisterProviderPage.vue'),
         meta: { title: 'Cadastro de Barbeiro' }
     },
+    {
+        path: '/client/register',
+        name: 'RegisterClient',
+        component: () => import('@/pages/clients/RegisterClientPage.vue'),
+        meta: { title: 'Cadastro de Clienteash' }
+    },
 
     // ==========================================
     // ONBOARDING DO BARBEIRO

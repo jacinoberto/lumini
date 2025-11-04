@@ -56,6 +56,7 @@ import api from '@/services/api'; // Importa nossa instância do Axios
 import { BaseButton, StepOneProvider, StepTwoProvider, StepThreeProvider } from '@/components'
 import userMock from '@/mock/userMock.ts';
 import type { WorkingHour } from '@/types/service';
+import {useAuthStore} from "@/stores/authStore.ts";
 
 export default defineComponent({
   name: "BarberOnboardingBarber",
@@ -98,7 +99,7 @@ export default defineComponent({
         },
         service: {
           service: { required },
-          price: { required },
+          value: { required },
           duration: { required }
         }
       }
@@ -202,7 +203,16 @@ export default defineComponent({
           };
 
           // 2. Faz a chamada da API
-          await api.put(`/barbershops/${barbershopId}`, payload);
+          const authStore = useAuthStore();
+          if (!authStore.isAuthenticated) {
+            throw new Error('Usuário não autenticado. Faça login novamente.');
+          }
+
+          await api.put(`/barbershops/${authStore.barbershopId}`, payload, {
+            headers: {
+              Authorization: `Bearer ${authStore.token}`,
+            },
+          });
 
           // 3. Sucesso! Redireciona para o Dashboard
           this.$router.push({ name: 'Dashboard' }); // Verifique se 'Dashboard' é o nome da sua rota

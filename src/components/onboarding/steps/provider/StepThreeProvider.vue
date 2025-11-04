@@ -60,8 +60,8 @@ export default defineComponent({
           placeholder="40,00"
           type="number"
           v-model="formData.service.value"
-          :error="validation.service.price.$error"
-          :errorMessage="validation.service.price.$errors[0]?.$message"
+          :error="validation.service.value.$error"
+          :errorMessage="validation.service.value.$errors[0]?.$message"
       />
     </div>
 

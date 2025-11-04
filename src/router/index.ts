@@ -237,8 +237,8 @@ router.beforeEach((to, from, next) => {
     const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
     const requiredRole = to.matched.slice().reverse().find(record => record.meta.role)?.meta.role as string | undefined;
 
-    const isAuthenticated = authStore.isAuthenticated;
-    const userRole = authStore.user?.role;
+    const isAuthenticated = authStore.isAuthenticated || localStorage.getItem('token');
+    const userRole = authStore.user ? authStore.user?.role : localStorage.getItem('userRole');
 
     console.log('🔐 Router Guard:', {
         to: to.name,

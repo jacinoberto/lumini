@@ -51,6 +51,7 @@ import { required, email, minLength, sameAs, helpers } from '@vuelidate/validato
 // Componentes
 import { CardHeather, BaseInput, BaseButton, BaseFileInput, BaseTextarea } from "@/components";
 import type { RegisterProvider } from '@/types/user';
+import {useAuthStore} from "@/stores/authStore.ts";
 
 export default defineComponent({
   name: "RegisterProviderPage",
@@ -112,31 +113,36 @@ export default defineComponent({
         };
 
         const response = await api.post('/register', payload);
-
         const { access_token, user } = response.data;
-        const barbershopId = user.barbershop.id;
 
-        localStorage.setItem('authToken', access_token);
-        localStorage.setItem('barbershopId', barbershopId);
-        api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        // 🔹 Usa o authStore para registrar o token corretamente
+        const authStore = useAuthStore();
+        authStore.setAuth(access_token, user);
 
-        router.push({ name: 'BarberOnboardingBarber' });
+        // 🔹 Garante que o ID da barbearia seja salvo também
+        if (user.barbershop?.id) {
+          localStorage.setItem('barbershopId', user.barbershop.id);
+        }
 
+        // 🔹 Guarda também o user completo, se quiser reaproveitar
+        localStorage.setItem('userData', JSON.stringify(user));
+
+        // 🔹 Redireciona para o onboarding
+        this.$router.push({ name: 'BarberOnboardingBarber' });
       } catch (error: any) {
-        const apiErrors = error.response?.data?.errors || {}; // Supondo que apiErrors venha daqui
+        const apiErrors = error.response?.data?.errors || {};
         const errorKeys = Object.keys(apiErrors);
         const firstErrorKey = errorKeys.length > 0 ? errorKeys[0] : undefined;
 
         if (firstErrorKey && apiErrors[firstErrorKey]) {
-          this.apiErrorMessage = apiErrors[firstErrorKey][0]; // Acessa apenas se a chave existir
+          this.apiErrorMessage = apiErrors[firstErrorKey][0];
         } else {
-          // Define uma mensagem padrão caso não haja erros específicos ou a estrutura seja inesperada
           this.apiErrorMessage = error.response?.data?.message || 'Ocorreu um erro desconhecido.';
         }
       } finally {
         this.isLoading = false;
       }
-    },
+    }
   },
 });
 </script>

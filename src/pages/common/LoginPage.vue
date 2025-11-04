@@ -136,7 +136,7 @@ export default defineComponent({
           this.$router.push({ name: 'Dashboard' });
         } else if (user.role === 'CLIENT') {
           // CORREÇÃO: O nome da sua rota de home do cliente é 'ClientHome'
-          this.$router.push({ name: 'ClientHome' });
+          this.$router.push({ name: 'ClientDashboard' });
         } else {
           this.apiErrorMessage = "Tipo de usuário desconhecido.";
         }
